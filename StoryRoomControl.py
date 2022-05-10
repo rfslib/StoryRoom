@@ -14,11 +14,12 @@
     - clean up and loop to top
 """
 
+from ctypes import alignment
 import tkinter as tk
 import time
 from turtle import width
 
-###from story_room_timer import *
+from story_room_timer import *
 
 class Story_Room_Control( ):
 
@@ -37,13 +38,13 @@ class Story_Room_Control( ):
     mheight = 300
     moffsetx = 0
     moffsety = 200
-    win_bg = '#efffef'
     ctrl_title = 'Story Room'       # title
     ctrl_font = 'Lucida Console'    # primary font for text
-    ctrl_fontsize = 24              # font size
+    ctrl_fontsize = 48              # font size
+    ctrl_fontcolor = '#100010'
     ctrl_entry = 'set filename'     # Button text for filename entry
     ctrl_entrysize = 12             # font size for filename entry
-    ctrl_bg = 'grey'                # background color
+    ctrl_bg = '#efffef'             # background color
     frame_pad = 4                   # padding inside of frames
 
 
@@ -55,44 +56,44 @@ class Story_Room_Control( ):
 
         # create the control display so we can query the system
         self.winc = tk.Tk( )
-        ###self.timer_win = Story_Room_Timer()
-
+        self.timer_win = Story_Room_Timer()
+        self.winc.config( bg = self.ctrl_bg )
         # set up the control display on the control screen
         self.winc.overrideredirect( True )
-        # monitor sizes change, so let's see what we have
+        # monitor sizes change, so let's see what we have and set the display appropriately
         self.mwidth = self.winc.winfo_screenwidth( )
         self.mheight = self.winc.winfo_screenheight( )
         if not self.debug:
-            self.mwidth = self.winc.winfo_screenwidth( )
-            self.mheight = self.winc.winfo_screenheight( )
             self.moffsetx = 0
             self.moffsety = 0
-
         self.winc.geometry( f'{self.mwidth}x{self.mheight}+{self.moffsetx}+{self.moffsety}' )
 
-        self.winc.config( bg = self.win_bg )
-
-        if self.debug:
-            self.dbgframe = tk.Frame( master=self.winc )
-            self.dbgframe.grid( row=0, column=0)
-            self.ctrl_exb = tk.Button( self.dbgframe, text = 'X', command = self.exit_class ).pack()
-
+        # set up the title frame
+        # full width: https://intellipaat.com/community/69111/python-tkinter-frame-making-frame-width-span-full-root-window-width
         self.ttlframe = tk.Frame( master=self.winc,
-            relief = tk.RIDGE, borderwidth = 5, bg='#33ff33',
+            relief = tk.RIDGE, borderwidth = 5, bg=self.ctrl_bg,
             padx = self.frame_pad, pady = self.frame_pad )
-        self.ttlframe.grid( row=1, column=1, padx = self.frame_pad, pady = self.frame_pad )
-        tk.Label( master=self.ttlframe, text=self.ctrl_title, font=('Lucida Console', 32) ).pack( padx = self.frame_pad, pady = self.frame_pad)
+        self.ttlframe.grid( row=0, column=0, padx = self.frame_pad, pady = self.frame_pad, sticky='ew' )
+        self.winc.grid_columnconfigure( 0, weight=1 )
+        tk.Label( master=self.ttlframe, # width=30,
+            text=self.ctrl_title, font=('Lucida Console', self.ctrl_fontsize), bg=self.ctrl_bg, fg=self.ctrl_fontcolor,
+            ).pack( padx = self.frame_pad, pady = self.frame_pad)
 
-
-        self.btnframe = tk.Frame( master=self.winc, width = self.mwidth, relief = tk.GROOVE, borderwidth = 3, padx = self.frame_pad, pady = self.frame_pad )
-        self.btnframe.grid( row=2, column=1, padx = self.frame_pad, pady = self.frame_pad )
-        tk.Label( master=self.btnframe, text='' ).pack( padx = self.frame_pad, pady = self.frame_pad)
-        
-        
+        # create a frame for interactions (buttons, text entry, etc.)
+        self.btnframe = tk.Frame( master=self.winc, 
+            padx = self.frame_pad, pady = self.frame_pad )
+        self.btnframe.grid( row=1, column=0, padx = self.frame_pad, pady = self.frame_pad, sticky='ewn' )
+        tk.Label( master=self.btnframe, text='' ).pack( padx = self.frame_pad, pady = self.frame_pad )
+              
         self.ctrl_strt= tk.Button( self.btnframe, text = 'Start Session',
                 command = self.do_one,
                 font = ( self.ctrl_font, self.ctrl_entrysize ) ).pack()
 
+        # add a kill button if we're in development
+        if self.debug:
+            self.dbgframe = tk.Frame( master=self.winc )
+            self.dbgframe.grid( row=4, column=0, sticky='w')
+            self.ctrl_exb = tk.Button( self.dbgframe, text = 'X', command = self.exit_class, bg='red' ).pack()
 
         if self.debug: print( 'control ready' )
         # ok, keep the screens in the loop ;)
@@ -112,8 +113,8 @@ class Story_Room_Control( ):
         self.timer_countdown = self.timer_countdown_default
         self.timer_recording = self.timer_recording_default
 
-        ###self.timer_win.create_window()
-        ###self.timer_win.txt = 'Starting'
+        self.timer_win.create_window()
+        self.timer_win.txt = 'Starting'
         time.sleep( 1 )
         
         if self.debug: print( 'ready for the next session' )
@@ -144,7 +145,7 @@ class Story_Room_Control( ):
         if self.debug: print( 'TODO: wait for remux' )
 
         #- clean up and exit
-        ###self.timer_win.destroy_window()        
+        self.timer_win.destroy_window()        
         if self.debug: print( 'do_one() exit' )
         self.do_one_active = False
 

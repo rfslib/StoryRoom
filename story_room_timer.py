@@ -23,7 +23,7 @@ class Story_Room_Timer( ):
     debug = 1
 
     ## control
-    txt = '<init>'
+    txt = 'starting'
     state = 0 
     # 0 = waiting to start
     # 1 = countdown to start of recording
@@ -32,12 +32,12 @@ class Story_Room_Timer( ):
     # 4 = ready
 
      ## attributes of the timer overlay (OSD, on-screen display)
-    text_color = 'DarkGrey'        # normal color of text
+    text_color = 'red' #'DarkGrey'        # normal color of text
     text_warn_color = 'DarkRed'        # warning color of text
     text_font = 'Lucida Console'   # font for text
     text_fontsize = 64             # font size
     win_placement = '600x100+0+0' # size and position of timer window
-    win_fade = 0.6                # transparency value of the background
+    win_fade = 0.4                # transparency value of the background
     win_destroy = False             # set to True to self-destruct
 
     def __init__(self) -> None:
@@ -46,31 +46,35 @@ class Story_Room_Timer( ):
     def create_window( self ):
         self.win_destroy = False
         # set up the timer display on the monitor (OBS calls it a 'Projector')
+
+        # create the main window
         self.win = tk.Tk( )
-        #self.win.geometry( self.win_placement )
+        self.win.geometry( self.win_placement )
         self.win.attributes( '-alpha', self.win_fade )
         self.win.overrideredirect( True )
-        #self.win.grid( )
-        if self.debug: self.win_exb = tk.Button( self.win, text = 'debug exit', 
-            command = self.exit_class ).grid( column = 1, row = 0 )
-        self.show_text( '<init>' )
+
+        self.foo = tk.Label( master=self.win, text=self.txt )
+
+        if self.debug: self.win_exb = tk.Button( master=self.win, text = 'X', bg='red',
+            command = self.exit_class ).pack()
+        self.txt='<init>'
         if self.debug: print( 'timer ready' )
         self.update_timer_display( )
-        # self.win.mainloop( ) # the main class does the main loop :)
+        #self.win.mainloop( ) # the main class does the main loop :)
 
     def destroy_window( self ):
         self.win_destroy = True
 
-    def show_text( self, str ):
-        tk.Label( self.win, text = str,
-            font = ( self.text_font, self.text_fontsize ), 
-            fg = self.text_color ).pack().grid( column = 0, row = 0 )
+    def show_text( self ):
+        self.foo.config( text=self.txt )
+        self.foo.pack()
  
     def timer_waiting( self ):
         self.txt = 'waiting'
 
     def update_timer_display( self ):
-        self.show_text( self.txt )
+        self.show_text( )
+        if self.debug: print( f'txt="{self.txt}"')
         if self.win_destroy:
             self.win.destroy()
         else:
@@ -83,5 +87,7 @@ class Story_Room_Timer( ):
         self.win.destroy()
         if self.debug: print( 'timer destroyed' )
 
-   
-tst = Story_Room_Timer()
+if __name__ == '__main__':   
+    tst = Story_Room_Timer()
+    tst.create_window()
+    tst.win.mainloop()
