@@ -16,6 +16,7 @@
 
 import tkinter as tk
 import time
+from turtle import width
 
 ###from story_room_timer import *
 
@@ -36,6 +37,7 @@ class Story_Room_Control( ):
     mheight = 300
     moffsetx = 0
     moffsety = 200
+    win_bg = '#efffef'
     ctrl_title = 'Story Room'       # title
     ctrl_font = 'Lucida Console'    # primary font for text
     ctrl_fontsize = 24              # font size
@@ -66,23 +68,31 @@ class Story_Room_Control( ):
             self.moffsetx = 0
             self.moffsety = 0
 
-        self.winc.geometry( f'{self.mwidth}x{self.mheight}+{self.moffsetx}+{self.moffsety}' )    
+        self.winc.geometry( f'{self.mwidth}x{self.mheight}+{self.moffsetx}+{self.moffsety}' )
 
-        self.ttlframe = tk.Frame( master=self.winc, width = self.mwidth, relief = tk.GROOVE, borderwidth = 1, padx = self.frame_pad, pady = self.frame_pad )
-        self.ttlframe.grid( row=0, column=0, padx = self.frame_pad, pady = self.frame_pad )
-        tk.Label( master=self.ttlframe, text=self.ctrl_title ).pack( padx = self.frame_pad, pady = self.frame_pad)
+        self.winc.config( bg = self.win_bg )
+
+        if self.debug:
+            self.dbgframe = tk.Frame( master=self.winc )
+            self.dbgframe.grid( row=0, column=0)
+            self.ctrl_exb = tk.Button( self.dbgframe, text = 'X', command = self.exit_class ).pack()
+
+        self.ttlframe = tk.Frame( master=self.winc,
+            relief = tk.RIDGE, borderwidth = 5, bg='#33ff33',
+            padx = self.frame_pad, pady = self.frame_pad )
+        self.ttlframe.grid( row=1, column=1, padx = self.frame_pad, pady = self.frame_pad )
+        tk.Label( master=self.ttlframe, text=self.ctrl_title, font=('Lucida Console', 32) ).pack( padx = self.frame_pad, pady = self.frame_pad)
 
 
-        self.btnframe = tk.Frame( master=self.winc, width = self.mwidth, relief = tk.RIDGE, borderwidth = 1, padx = self.frame_pad, pady = self.frame_pad )
-        self.btnframe.grid( row=1, column=0, padx = self.frame_pad, pady = self.frame_pad )
+        self.btnframe = tk.Frame( master=self.winc, width = self.mwidth, relief = tk.GROOVE, borderwidth = 3, padx = self.frame_pad, pady = self.frame_pad )
+        self.btnframe.grid( row=2, column=1, padx = self.frame_pad, pady = self.frame_pad )
         tk.Label( master=self.btnframe, text='' ).pack( padx = self.frame_pad, pady = self.frame_pad)
         
         
         self.ctrl_strt= tk.Button( self.btnframe, text = 'Start Session',
                 command = self.do_one,
                 font = ( self.ctrl_font, self.ctrl_entrysize ) ).pack()
-        if self.debug: self.ctrl_exb = tk.Button( self.btnframe, text = 'debug exit', 
-                command = self.exit_class ).pack()
+
 
         if self.debug: print( 'control ready' )
         # ok, keep the screens in the loop ;)
