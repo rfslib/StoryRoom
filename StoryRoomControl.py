@@ -14,10 +14,8 @@
     - clean up and loop to top
 """
 
-from ctypes import alignment
 import tkinter as tk
 import time
-from turtle import width
 
 from story_room_timer import *
 
