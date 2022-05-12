@@ -9,11 +9,18 @@
             meant to run continuously
 """
 
+from time import time
 from tkinter import *
 from control_window import Control_Window
 from timer_window import Timer_Window
 
 debug = 1
+
+def callback_test( ):
+    print( 'callback called :)')
+    timer_win.set_txt( 'YAY!')
+    timer_win.start_countdown( 'remaining minutes: {}', 120, 60, 60, callback_test )
+
 
 root = Tk()
 
@@ -24,7 +31,9 @@ else: # but normally hide the root window
     root.withdraw()
 
 control_win = Control_Window( root )
+timer_win = Timer_Window( root )
 
-#timer_win = Timer_Window( root )
+if debug: timer_win.start_countdown( 'starting in {} seconds', 5, 1, 3, callback_test )
 
 root.mainloop() # make Tk work
+

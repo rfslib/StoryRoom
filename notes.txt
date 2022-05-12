@@ -1,4 +1,11 @@
 
+
+
+---------------------------------------------
+secondary display ideas:
+https://stackoverflow.com/questions/30312875/tikinter-winfo-screenwidth-when-used-with-dual-monitors
+https://stackoverflow.com/questions/17741928/tkinter-screen-wdith-and-height-of-secondary-display
+----------------------------------------
 multiple windows:
 https://pythonguides.com/python-tkinter-multiple-windows-tutorial/
 
