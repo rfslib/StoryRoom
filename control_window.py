@@ -23,7 +23,6 @@ class Control_Window(Toplevel):
     ctrl_bg = '#efffef'             # background color
     frame_pad = 4                   # padding inside of frames
 
-
     def __init__(self, master):
         Toplevel.__init__(self,master)
 
@@ -39,16 +38,16 @@ class Control_Window(Toplevel):
             self.moffsety = 0
         self.geometry( f'{self.mwidth}x{self.mheight}+{self.moffsetx}+{self.moffsety}')
 
-        #pass self as the parent to all the child widgets instead of window
-        title = Entry(self,relief=FLAT, bg="#BAD0EF", bd=0)
-        title.pack(side=TOP)
-        scrollBar = Scrollbar(self, takefocus=0, width=20)
-        self.textArea = Text(self, height=4, width=1000, bg="#BAD0EF", font=("Times", "14"))
-        scrollBar.pack(side=RIGHT, fill=Y)
-        self.textArea.pack(side=LEFT, fill=Y)
-        scrollBar.config(command=self.textArea.yview)
-        self.textArea.config(yscrollcommand=scrollBar.set)
-        self.textArea.insert(END, self.message)
+        # #pass self as the parent to all the child widgets instead of window
+        # title = Entry(self,relief=FLAT, bg="#BAD0EF", bd=0)
+        # title.pack(side=TOP)
+        # scrollBar = Scrollbar(self, takefocus=0, width=20)
+        # self.textArea = Text(self, height=4, width=1000, bg="#BAD0EF", font=("Times", "14"))
+        # scrollBar.pack(side=RIGHT, fill=Y)
+        # self.textArea.pack(side=LEFT, fill=Y)
+        # scrollBar.config(command=self.textArea.yview)
+        # self.textArea.config(yscrollcommand=scrollBar.set)
+        # self.textArea.insert(END, self.message)
         #self.mainloop() #leave this to the root window
         self.upd()
 
