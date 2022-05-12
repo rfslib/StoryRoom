@@ -5,61 +5,61 @@
 
 from tkinter import *
 
-class Control_Window(Toplevel):
+class Control_Window( Toplevel ):
 
     debug = 1
 
-    ## attributes of the console screen
-    mwidth = 500
-    mheight = 300
+    ## attributes of the control window
     moffsetx = 0
-    moffsety = 200
-    ctrl_title = 'Story Room'       # title
-    ctrl_font = 'Lucida Console'    # primary font for text
-    ctrl_fontsize = 48              # font size
-    ctrl_fontcolor = '#100010'
-    ctrl_entry = 'set filename'     # Button text for filename entry
-    ctrl_entrysize = 12             # font size for filename entry
-    ctrl_bg = '#efffef'             # background color
-    frame_pad = 4                   # padding inside of frames
+    moffsety = 0
+    ttl = 'Story Room'       # title
+    font = 'Lucida Console'    # primary font for text
+    fontsize = 48              # font size
+    fontcolor = '#100010'
+    bgcolor = '#efffef'             # background color
+    padxy = 4                   # padding inside of frames
+    btn_fontsize = 12
 
     def __init__(self, master):
         Toplevel.__init__(self,master)
 
         # set our look
-        self.config( bg=self.ctrl_bg)
+        self.config( bg=self.bgcolor)
         self.overrideredirect( True )
     
         # get our size and location
         self.mwidth = self.winfo_screenwidth( )
-        self.mheight = self.winfo_screenmmheight( )
-        if not self.debug:
-            self.moffsetx = 0
-            self.moffsety = 0
+        self.mheight = self.winfo_screenheight( )
         self.geometry( f'{self.mwidth}x{self.mheight}+{self.moffsetx}+{self.moffsety}')
+#---
+        self.ttlframe = Frame( master=self,
+            relief = RIDGE, borderwidth = 5, bg=self.bgcolor,
+            padx = self.padxy, pady = self.padxy )
+        self.ttlframe.grid( row=0, column=0, padx = self.padxy, pady = self.padxy, sticky='ew' )
+        self.grid_columnconfigure( 0, weight=1 )
+        Label( master=self.ttlframe, # width=30,
+            text=self.ttl, font=('Lucida Console', self.fontsize), bg=self.bgcolor, fg=self.fontcolor,
+            ).pack( padx = self.padxy, pady = self.padxy)
 
-        # #pass self as the parent to all the child widgets instead of window
-        # title = Entry(self,relief=FLAT, bg="#BAD0EF", bd=0)
-        # title.pack(side=TOP)
-        # scrollBar = Scrollbar(self, takefocus=0, width=20)
-        # self.textArea = Text(self, height=4, width=1000, bg="#BAD0EF", font=("Times", "14"))
-        # scrollBar.pack(side=RIGHT, fill=Y)
-        # self.textArea.pack(side=LEFT, fill=Y)
-        # scrollBar.config(command=self.textArea.yview)
-        # self.textArea.config(yscrollcommand=scrollBar.set)
-        # self.textArea.insert(END, self.message)
-        #self.mainloop() #leave this to the root window
-        self.upd()
+        # create a frame for interactions (buttons, text entry, etc.)
+        self.btnframe = Frame( master=self, 
+            padx = self.padxy, pady = self.padxy )
+        self.btnframe.grid( row=1, column=0, padx = self.padxy, pady = self.padxy, sticky='ewn' )
+        Label( master=self.btnframe, text='' ).pack( padx = self.padxy, pady = self.padxy )
+              
+        self.ctrl_strt= Button( self.btnframe, text = 'Start Session',
+            command = self.btn_goto,
+            font = ( self.font, self.btn_fontsize ) ).pack()
 
-      
-    def run(self):
-      self.display_note_gui()
+        if self.debug: print( 'control window ready' )
 
+    def btn_goto( self ):
+        pass
+    
 
-    def msg(self, txt):
-        self.textArea.insert( END, txt )
-
-
-    def upd( self ):
-        self.msg( '. \n' )
-        self.after( 1000, self.upd ) 
+if __name__ == '__main__':
+    root = Tk()
+    root.geometry( '300x100+0+0' )
+    root.title( 'close me to exit test' )
+    tst = Control_Window( root )
+    root.mainloop()
