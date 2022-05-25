@@ -37,8 +37,8 @@ class Timer_Window( Toplevel ):
     fontsize = 64              # font size
     fontcolor = 'DarkGrey'
     warncolor = "DarkRed"
-    alpha = 0.1
-    warnalpha = 0.6
+    alpha = 0.4
+    warnalpha = 0.7
     padxy = 4                   # padding inside of frames
     btn_fontsize = 12
 
