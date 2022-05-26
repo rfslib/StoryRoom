@@ -1,4 +1,11 @@
 
+pass events from control screen to main
+https://stackoverflow.com/questions/32771369/how-to-pass-an-event-to-parent-tkinter-widget
+---------------------------------------
+
+the websocket has GetStats, which includes available disk space
+----------------------------------------
+
 websocket (for the family)
 https://github.com/obsproject/obs-websocket/releases/tag/4.9.1
 

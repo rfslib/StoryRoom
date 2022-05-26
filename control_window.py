@@ -2,7 +2,8 @@
     file: control_window.py
     author: ed c
 """
-
+import asyncio
+from obs_control import Obs_Control
 from tkinter import *
 
 class Control_Window( Toplevel ):
@@ -31,7 +32,12 @@ class Control_Window( Toplevel ):
     def __init__( self, master ):
         Toplevel.__init__(self,master)
 
+        obsws = Obs_Control()
+
         self._infoline=StringVar()
+        self.foo = obsws.obs_status( self._infoline )
+        print( f'foo: {self.foo}')
+        self.set_infoline( self.foo )
         self._diskline=StringVar()
 
         # set our look
@@ -57,9 +63,9 @@ class Control_Window( Toplevel ):
         self.infframe = Frame( master=self,
             bg=self.bgcolor, padx=self.padxy, pady=self.padxy)
         self.infframe.grid( row=99, column=0, padx=self.padxy, pady=self.padxy, sticky='es' )
-        inflabel = Label( master=self.infframe, text=self._infoline.get(), fg=self.info_fontcolor,
+        inflabel = Label( master=self.infframe, text=self._infoline, fg=self.info_fontcolor,
             font=( 'Lucida Console', self.info_fontsize ) ).pack( padx=self.padxy, pady=self.padxy )
-        dsklabel = Label( master=self.infframe, text=self._diskline.get(), fg=self.info_fontcolor,
+        dsklabel = Label( master=self.infframe, text=self._diskline, fg=self.info_fontcolor,
             font=( 'Lucida Console', self.info_fontsize ) ).pack( padx=self.padxy, pady=self.padxy )
 
         # create a frame for interactions (buttons, text entry, etc.)
