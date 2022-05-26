@@ -16,7 +16,7 @@ from turtle import color
 class Timer_Window( Toplevel ):
 
     debug = 0
-    logit = 1
+    logit = 0
     foo = 0
 
     ## countdown stuff
@@ -57,7 +57,9 @@ class Timer_Window( Toplevel ):
 
         self._txt = StringVar()
         self._txt.set( 'waiting for start' )
-        self.lab = Label( master=self, textvariable=self._txt, font=('Lucida Console', self.fontsize) ).pack( padx=self.padxy * 2, pady=self.padxy, side='left')
+        self.lab = Label( master=self, textvariable=self._txt, font=('Lucida Console', self.fontsize), 
+            bg=self.warncolor
+            ).pack( padx=self.padxy * 2, pady=self.padxy, side='left')
 
         if self.debug: self.upd( )
         if self.logit: print( 'timer window ready' )
@@ -75,7 +77,7 @@ class Timer_Window( Toplevel ):
         self.after( 1000, self.upd )
 
     def start_countdown( self, textstring, seconds, interval, warn_at, callback ):
-        print( f'count down {seconds} seconds, update every {interval} seconds')
+        if self.logit: print( f'count down {seconds} seconds, update every {interval} seconds')
         self.countdown_string = textstring
         self.countdown_callback = callback
         self.countdown_seconds = seconds

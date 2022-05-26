@@ -2,7 +2,7 @@ import asyncio
 import simpleobsws
 
 loop = asyncio.get_event_loop()
-ws = simpleobsws.obsws(host='127.0.0.1', port=4444, password='family', loop=loop) # Every possible argument has been passed, but none are required. See lib code for defaults.
+ws = simpleobsws.obsws(host='127.0.0.1', port=4444, password='MYSecurePassword', loop=loop) # Every possible argument has been passed, but none are required. See lib code for defaults.
 
 async def on_event(data):
     print('New event! Type: {} | Raw Data: {}'.format(data['update-type'], data)) # Print the event data. Note that `update-type` is also provided in the data

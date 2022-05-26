@@ -23,10 +23,16 @@ class Control_Window( Toplevel ):
     fontcolor = '#100010'
     bgcolor = '#efffef'             # background color
     padxy = 4                   # padding inside of frames
+    info_fontsize = 10
+    info_fontcolor = 'grey'
+    #infoline = '' # StringVar, created in __init__, see getter and setter
     
 
-    def __init__(self, master):
+    def __init__( self, master ):
         Toplevel.__init__(self,master)
+
+        self._infoline=StringVar()
+        self._diskline=StringVar()
 
         # set our look
         self.config( bg=self.bgcolor)
@@ -47,10 +53,19 @@ class Control_Window( Toplevel ):
             text=self.ttl, font=('Lucida Console', self.fontsize), bg=self.bgcolor, fg=self.fontcolor,
             ).pack( padx = self.padxy, pady = self.padxy)
 
+        # "info" frame
+        self.infframe = Frame( master=self,
+            bg=self.bgcolor, padx=self.padxy, pady=self.padxy)
+        self.infframe.grid( row=99, column=0, padx=self.padxy, pady=self.padxy, sticky='es' )
+        inflabel = Label( master=self.infframe, text=self._infoline.get(), fg=self.info_fontcolor,
+            font=( 'Lucida Console', self.info_fontsize ) ).pack( padx=self.padxy, pady=self.padxy )
+        dsklabel = Label( master=self.infframe, text=self._diskline.get(), fg=self.info_fontcolor,
+            font=( 'Lucida Console', self.info_fontsize ) ).pack( padx=self.padxy, pady=self.padxy )
+
         # create a frame for interactions (buttons, text entry, etc.)
         self.btnframe = Frame( master=self, 
             padx = self.padxy, pady = self.padxy )
-        self.btnframe.grid( row=1, column=0, padx = self.padxy, pady = self.padxy, sticky='ewn' )
+        self.btnframe.grid( row=2, column=0, padx = self.padxy, pady = self.padxy, sticky='ewn' )
         #Label( master=self.btnframe, text='' ).pack( padx = self.padxy, pady = self.padxy )
               
         self.ctrl_strt= Button( self.btnframe, text = self.start_btn_txt,
@@ -60,14 +75,25 @@ class Control_Window( Toplevel ):
 
         if self.debug: print( 'control window ready' )
 
-    def start_session( self ):
-        
+    def start_session():
         pass
+
+    def get_infoline( self ):
+        return self._infoline
+
+    def set_infoline( self, textin ):
+        self._infoline.set( str( textin ) )
+    
+    def get_diskline( self ):
+        return self._diskline
+
+    def set_diskline( self, textin ):
+        self._diskline.set( str( textin ) )
     
 
 if __name__ == '__main__':
     root = Tk()
     root.geometry( '300x100+0+0' )
     root.title( 'close me to exit test' )
-    tst = Control_Window( root )
+    tst = Control_Window( root, '' )
     root.mainloop()

@@ -2,6 +2,10 @@
 websocket (for the family)
 https://github.com/obsproject/obs-websocket/releases/tag/4.9.1
 
+https://github.com/IRLToolkit/simpleobsws
+pip install simpleobsws didn't work (why?), copy and pasted into directory from github
+also pip install dataclasses (??in user, not global??)
+
 ---------------------------------------------
 secondary display ideas:
 https://stackoverflow.com/questions/30312875/tikinter-winfo-screenwidth-when-used-with-dual-monitors
