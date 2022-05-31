@@ -8,7 +8,7 @@ async def make_request():
     await ws.connect() # Make the connection to OBS-Websocket
     result = await ws.call('GetVersion') # We get the current OBS version. More request data is not required
     print(result) # Print the raw json output of the GetVersion request
-    await asyncio.sleep(1)
+    # await asyncio.sleep(1)
     data = {'source':'test_source', 'volume':0.5}
     result = await ws.call('SetVolume', data) # Make a request with the given data
     print(result)

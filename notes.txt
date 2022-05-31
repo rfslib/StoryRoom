@@ -8,9 +8,10 @@ the websocket has GetStats, which includes available disk space
 
 websocket (for the family)
 https://github.com/obsproject/obs-websocket/releases/tag/4.9.1
+https://github.com/obsproject/obs-websocket/releases/download/4.9.1/obs-websocket-4.9.1-Windows-Installer.exe
 
 https://github.com/IRLToolkit/simpleobsws
-pip install simpleobsws didn't work (why?), copy and pasted into directory from github
+xpip install simpleobsws didn't work (why?), copy and pasted into directory from github -- turns out it was the wrong version
 also pip install dataclasses (??in user, not global??)
 
 ---------------------------------------------

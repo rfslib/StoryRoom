@@ -16,14 +16,8 @@ from tkinter import *
 # our classes for the two windows
 from control_window import Control_Window
 from timer_window import Timer_Window
-from obs_control import Obs_Control
-
-# for websocket interface to OBS Studio
-import asyncio
-import simpleobsws
 
 debug = 1
-
 
 # Tk event callback
 def callback_test( ):
@@ -35,7 +29,7 @@ def callback_test( ):
 wm = Tk()
 
 if debug: # show the root window so it can be closed to exit the test
-    wm.geometry( '400x100+0+0' )
+    wm.geometry( '400x100+0+48' )
     wm.title( 'Close me to shut down the test' )
 else: # but normally hide the root window
     wm.withdraw()

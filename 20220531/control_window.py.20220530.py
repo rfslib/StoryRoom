@@ -3,14 +3,12 @@
     author: ed c
 """
 import asyncio
-import simpleobsws
+from obs_control import Obs_Control
 from tkinter import *
-
-import time
 
 class Control_Window( Toplevel ):
 
-    debug = 0
+    debug = 1
 
     # visuals
     start_btn_txt = 'Start Session'
@@ -30,17 +28,19 @@ class Control_Window( Toplevel ):
     info_fontcolor = 'grey'
     #infoline = '' # StringVar, created in __init__, see getter and setter
     
-    # OBS info
-    pswd = 'family'
-    obs_version = ''
-    ws_version = ''
-    obs_status = ''
-
-    # environment info
-    free_disk = 0.0
 
     def __init__( self, master ):
         Toplevel.__init__(self,master)
+
+        obsws = Obs_Control()
+
+        self._infoline=StringVar()
+        # TODO: self.foo = obsws.obs_status( self._infoline )
+        #self.foo = obsws.loop.run_until_complete( obsws.obs_status( self._infoline ) ) # TODO: test this
+        #print( f'foo: {self.foo}')
+        obsws.obs_version
+        self.set_infoline( f'OBS Studio version: {obsws.obs_version_text}' )
+        self._diskline=StringVar()
 
         # set our look
         self.config( bg=self.bgcolor)
@@ -49,11 +49,6 @@ class Control_Window( Toplevel ):
         # get our size and location
         self.mwidth = self.winfo_screenwidth( )
         self.mheight = self.winfo_screenheight( )
-        if self.debug:
-            self.mwidth /= 2
-            self.mwidth /= 2
-            self.moffsetx = 48
-            self.moffsety = 48
         self.geometry( f'{self.mwidth}x{self.mheight}+{self.moffsetx}+{self.moffsety}')
 
         # set up the window's "title" frame
@@ -66,18 +61,7 @@ class Control_Window( Toplevel ):
             text=self.ttl, font=('Lucida Console', self.fontsize), bg=self.bgcolor, fg=self.fontcolor,
             ).pack( padx = self.padxy, pady = self.padxy)
 
-        # set up an interface to OBS Studio
-        self.loop = asyncio.get_event_loop()
-        self.ws = simpleobsws.obsws(host='127.0.0.1', port=4444, password=self.pswd, loop=self.loop)
-
-        # get some info from OBS
-        self.loop.run_until_complete( self.get_obs_info( ) )
-
         # "info" frame
-        self._infoline=StringVar()
-        self._diskline=StringVar()
-        self.set_infoline( f'OBS Studio version: {self.obs_version}, Websockets version: {self.ws_version}' )
-        self.set_diskline( f'Free Disk Space: {self.free_disk / 1024:.1f}G')
         self.infframe = Frame( master=self,
             bg=self.bgcolor, padx=self.padxy, pady=self.padxy)
         self.infframe.grid( row=99, column=0, padx=self.padxy, pady=self.padxy, sticky='es' )
@@ -99,38 +83,6 @@ class Control_Window( Toplevel ):
 
         if self.debug: print( 'control window ready' )
 
-    async def get_obs_info( self ):
-        await self.ws.connect()
-        info = await self.ws.call( 'GetVersion' )
-        if self.debug: print( f'GetVersion: {info}')
-        self.obs_version = info[ 'obs-studio-version' ]
-        self.ws_version = info[ 'obs-websocket-version' ]
-        stats = await self.ws.call( 'GetStats' )
-        if self.debug: print( f'GetStats: {stats}')
-        self.free_disk = float( stats[ 'stats' ][ 'free-disk-space' ] )
-        await asyncio.sleep( 1 )
-        await self.ws.disconnect()
-
-    async def __start_recording( self ):
-        await self.ws.connect()
-        rc = await self.ws.call( 'StartRecording' )
-        print( f'start_recording rc: {rc}')
-        await asyncio.sleep( 1 )
-        await self.ws.disconnect( )
-
-    def start_recording( self ):
-        self.loop.run_until_complete( self.__start_recording( ) )
-
-    async def __stop_recording( self ):
-        await self.ws.connect()
-        rc = await self.ws.call( 'StopRecording' )
-        print( f'stop_recording rc: {rc}')
-        await asyncio.sleep( 1 )
-        await self.ws.disconnect( )
-
-    def stop_recording( self ):
-        self.loop.run_until_complete( self.__stop_recording( ) )
-
     def start_session():
         pass
 
@@ -139,7 +91,6 @@ class Control_Window( Toplevel ):
 
     def set_infoline( self, textin ):
         self._infoline.set( str( textin ) )
-        #TODO: isn't this supposed to be automagic? self.infframe.update()
     
     def get_diskline( self ):
         return self._diskline.get()
@@ -150,10 +101,7 @@ class Control_Window( Toplevel ):
 
 if __name__ == '__main__':
     root = Tk()
-    root.geometry( '300x100+0+48' )
+    root.geometry( '300x100+0+0' )
     root.title( 'close me to exit test' )
-    tst = Control_Window( root )
-    #tst.start_recording( )
-    #time.sleep( 3 )
-    #tst.stop_recording( )
+    tst = Control_Window( root, '' )
     root.mainloop()
