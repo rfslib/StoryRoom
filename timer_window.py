@@ -101,6 +101,7 @@ class Timer_Window( Toplevel ):
         else:
             self.countdown_active = False
             self.countdown_complete = True
+            self.set_txt( '' )
             if self.logit: print( 'countdown complete')
             self.countdown_callback()
 

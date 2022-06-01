@@ -8,9 +8,17 @@ from tkinter import *
 
 import time
 
+import timer_window
+
 class Control_Window( Toplevel ):
 
-    debug = 0
+    debug = 1
+
+    # configuration stuff
+    timer_waiting_message = 'Riverton Story Room'
+    countdown_to_start = 20 # 20 seconds
+    recording_length = 3600 # one hour of recording = 3600 seconds
+    recording_warn_at = 120 # seconds before end of recording to start warning message
 
     # visuals
     start_btn_txt = 'Start Session'
@@ -50,11 +58,12 @@ class Control_Window( Toplevel ):
         self.mwidth = self.winfo_screenwidth( )
         self.mheight = self.winfo_screenheight( )
         if self.debug:
-            self.mwidth /= 2
-            self.mwidth /= 2
+            self.mwidth = int( self.mwidth / 2 ) 
+            self.mheight = int( self.mheight / 2 ) 
             self.moffsetx = 48
             self.moffsety = 48
         self.geometry( f'{self.mwidth}x{self.mheight}+{self.moffsetx}+{self.moffsety}')
+        if self.debug: print( f'{self.mwidth}x{self.mheight}+{self.moffsetx}+{self.moffsety}' )
 
         # set up the window's "title" frame
         self.ttlframe = Frame( master=self,
@@ -79,8 +88,8 @@ class Control_Window( Toplevel ):
         self.set_infoline( f'OBS Studio version: {self.obs_version}, Websockets version: {self.ws_version}' )
         self.set_diskline( f'Free Disk Space: {self.free_disk / 1024:.1f}G')
         self.infframe = Frame( master=self,
-            bg=self.bgcolor, padx=self.padxy, pady=self.padxy)
-        self.infframe.grid( row=99, column=0, padx=self.padxy, pady=self.padxy, sticky='es' )
+            bg=self.bgcolor, padx=self.padxy, pady=self.padxy )
+        self.infframe.grid( row=6, column=0, padx=self.padxy, pady=self.padxy, sticky = 'es' )
         inflabel = Label( master=self.infframe, text=self._infoline.get(), fg=self.info_fontcolor,
             font=( 'Lucida Console', self.info_fontsize ) ).pack( padx=self.padxy, pady=self.padxy )
         dsklabel = Label( master=self.infframe, text=self._diskline.get(), fg=self.info_fontcolor,
@@ -94,10 +103,20 @@ class Control_Window( Toplevel ):
               
         self.ctrl_strt= Button( self.btnframe, text = self.start_btn_txt,
             height=self.start_btn_height,
-            command = self.start_session,
+            command = self.schedule_recording,
             font = ( self.font, self.start_btn_fontsize ) ).pack()
 
         if self.debug: print( 'control window ready' )
+
+        # set up the timer window
+        self.tw = timer_window.Timer_Window( master )
+        self.tw.set_txt( self.timer_waiting_message )
+        if self.debug: print( 'timer window ready' )
+
+        if self.debug: print( 'system ready' )
+
+
+# ----
 
     async def get_obs_info( self ):
         await self.ws.connect()
@@ -130,6 +149,12 @@ class Control_Window( Toplevel ):
 
     def stop_recording( self ):
         self.loop.run_until_complete( self.__stop_recording( ) )
+
+    def test_callback( self ):
+        print( 'test_callback called' )
+
+    def schedule_recording( self ):
+        self.tw.start_countdown( 'starting in {} seconds', 20, 1, 10, self.test_callback )
 
     def start_session():
         pass
