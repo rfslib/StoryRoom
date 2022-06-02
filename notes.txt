@@ -1,4 +1,13 @@
 
+on-screen keyboard
+https://github.com/topics/virtual-keyboard-python # points to four github projects
+https://cppsecrets.com/users/5617971101051071011161151049711410997484852494964103109971051084699111109/On-Screen-Keyboard-using-Python.php
+https://stackoverflow.com/questions/60136473/how-to-call-and-close-a-virtual-keyboard-made-by-tkinter-using-touchscreen-displ
+https://masterprograming.com/how-to-create-virtual-onscreen-keyboard-using-python-and-tkinter/
+
+------------------------------------------
+pip install psutil
+------------------------------------------
 pass events from control screen to main
 https://stackoverflow.com/questions/32771369/how-to-pass-an-event-to-parent-tkinter-widget
 ---------------------------------------
