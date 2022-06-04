@@ -36,9 +36,11 @@ class Timer_Window( Toplevel ):
     font = 'Lucida Console'    # primary font for text
     fontsize = 64              # font size
     fontcolor = 'DarkGrey'
-    warncolor = "DarkRed"
-    alpha = 0.4
-    warnalpha = 0.7
+    fontwarn = 'Black' # 'DarkRed'
+    normbg = 'DarkRed' # 'Grey'
+    warnbg = 'DarkRed'
+    alpha = 0.5
+    warnalpha = 0.9
     padxy = 4                   # padding inside of frames
     btn_fontsize = 12
 
@@ -46,10 +48,13 @@ class Timer_Window( Toplevel ):
         Toplevel.__init__(self,master)
 
         # set our look
-        self.configure( background=self.warncolor) ## TODO:
+        self.timer_bg = StringVar( )
+        self.timer_bg.set( self.normbg )
+        self.configure( background=self.timer_bg.get( ) ) ## TODO:
         ## TODO: see https://daniweb.com/programming/software-development/threads/325471/tkinter-updating-label-color
-        self.overrideredirect( True )
-        self.attributes( '-alpha', self.alpha )
+        self.attributes( '-alpha', self.alpha ) # set transparency
+        self.overrideredirect( True ) # hide the title bar
+        
     
         # set our size and location
         self.xoffset = self.winfo_screenwidth( )
@@ -57,8 +62,13 @@ class Timer_Window( Toplevel ):
 
         self._txt = StringVar()
         self._txt.set( 'waiting for start' )
+        #self._lab_bg = StringVar()
+        #self._lab_bg.set( self.normbg )
+        #self._lab_fg = StringVar()
+        #self._lab_fg.set( self.fontcolor )
         self.lab = Label( master=self, textvariable=self._txt, font=('Lucida Console', self.fontsize), 
-            bg=self.warncolor
+            #fg=self._lab_fg.get( ), bg=self._lab_bg.get( )
+            fg=self.fontwarn, bg=self.warnbg
             ).pack( padx=self.padxy * 2, pady=self.padxy, side='left')
 
         if self.debug: self.upd( )
@@ -77,32 +87,39 @@ class Timer_Window( Toplevel ):
         self.after( 1000, self.upd )
 
     def start_countdown( self, textstring, seconds, interval, warn_at, callback ):
+        if self.countdown_active: return -1 # a countdown is already active, can't start another
+        self.countdown_active = True # set "in-countdown" flag
         if self.logit: print( f'count down {seconds} seconds, update every {interval} seconds')
         self.countdown_string = textstring
         self.countdown_callback = callback
         self.countdown_seconds = seconds
         self.countdown_interval = interval
         self.countdown_warn = warn_at
-        self.countdown_active = True
         self.countdown_complete = False
         self.attributes( '-alpha', self.alpha )
-        self.countdown()
+        self.config( bg=self.normbg )
+        #self._lab_fg.set( self.fontcolor )
+        #self._lab_bg.set( self.normbg )
+        self.countdown()  # start the countdown
 
     def countdown( self ):
-        #self.set_txt( self.countdown_seconds )
         if self.countdown_seconds > 0:
             if self.countdown_seconds <= self.countdown_warn:
                 self.attributes( '-alpha', self.warnalpha )
-            if not ( self.countdown_seconds % self.countdown_interval ):
+                self.config( bg=self.warnbg )
+                #self._lab_bg.set( self.warnbg )
+                #self._lab_fg.set( self.fontwarn )
+                #self.update()
+            if not ( self.countdown_seconds % self.countdown_interval ): # update at every 'interval'
                 self.set_txt( self.countdown_string.format( int( self.countdown_seconds / self.countdown_interval ) ) )
                 if self.logit: print( f'countdown at {self.countdown_seconds} seconds')
             self.countdown_seconds -= 1
             self.after( 1000, self.countdown )
         else:
-            self.countdown_active = False
-            self.countdown_complete = True
             self.set_txt( '' )
             if self.logit: print( 'countdown complete')
+            self.countdown_complete = True
+            self.countdown_active = False # clear in-countdown flag
             self.countdown_callback()
 
     # TODO: def stop_countdown( self ) # normal stop, or early stop

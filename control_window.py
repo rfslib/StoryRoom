@@ -154,7 +154,7 @@ class Control_Window( Toplevel ):
         print( 'test_callback called' )
 
     def schedule_recording( self ):
-        self.tw.start_countdown( 'starting in {} seconds', 20, 1, 10, self.test_callback )
+        self.tw.start_countdown( 'starting in {} seconds', 6, 1, 3, self.test_callback )
 
     def start_session():
         pass
