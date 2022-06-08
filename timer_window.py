@@ -37,9 +37,9 @@ class Timer_Window( Toplevel ):
     fontsize = 64              # font size
     fontcolor = 'DarkGrey'
     fontwarn = 'Black' # 'DarkRed'
-    normbg = 'DarkRed' # 'Grey'
+    normbg = 'Grey' # 'Grey'
     warnbg = 'DarkRed'
-    alpha = 0.5
+    normalpha = 0.5
     warnalpha = 0.9
     padxy = 4                   # padding inside of frames
     btn_fontsize = 12
@@ -48,11 +48,8 @@ class Timer_Window( Toplevel ):
         Toplevel.__init__(self,master)
 
         # set our look
-        self.timer_bg = StringVar( )
-        self.timer_bg.set( self.normbg )
-        self.configure( background=self.timer_bg.get( ) ) ## TODO:
-        ## TODO: see https://daniweb.com/programming/software-development/threads/325471/tkinter-updating-label-color
-        self.attributes( '-alpha', self.alpha ) # set transparency
+        self.config( bg=self.normbg)
+        self.attributes( '-alpha', self.normalpha ) # set transparency
         self.overrideredirect( True ) # hide the title bar
         
     
@@ -62,14 +59,11 @@ class Timer_Window( Toplevel ):
 
         self._txt = StringVar()
         self._txt.set( 'waiting for start' )
-        #self._lab_bg = StringVar()
-        #self._lab_bg.set( self.normbg )
-        #self._lab_fg = StringVar()
-        #self._lab_fg.set( self.fontcolor )
         self.lab = Label( master=self, textvariable=self._txt, font=('Lucida Console', self.fontsize), 
-            #fg=self._lab_fg.get( ), bg=self._lab_bg.get( )
             fg=self.fontwarn, bg=self.warnbg
-            ).pack( padx=self.padxy * 2, pady=self.padxy, side='left')
+            )
+        self.lab.pack( padx=self.padxy * 2, pady=self.padxy, side='left')
+        self.lab.config( bg=self.normbg )
 
         if self.debug: self.upd( )
         if self.logit: print( 'timer window ready' )
@@ -96,10 +90,8 @@ class Timer_Window( Toplevel ):
         self.countdown_interval = interval
         self.countdown_warn = warn_at
         self.countdown_complete = False
-        self.attributes( '-alpha', self.alpha )
+        self.attributes( '-alpha', self.normalpha )
         self.config( bg=self.normbg )
-        #self._lab_fg.set( self.fontcolor )
-        #self._lab_bg.set( self.normbg )
         self.countdown()  # start the countdown
 
     def countdown( self ):
@@ -107,9 +99,7 @@ class Timer_Window( Toplevel ):
             if self.countdown_seconds <= self.countdown_warn:
                 self.attributes( '-alpha', self.warnalpha )
                 self.config( bg=self.warnbg )
-                #self._lab_bg.set( self.warnbg )
-                #self._lab_fg.set( self.fontwarn )
-                #self.update()
+                self.lab.config( bg=self.warnbg )
             if not ( self.countdown_seconds % self.countdown_interval ): # update at every 'interval'
                 self.set_txt( self.countdown_string.format( int( self.countdown_seconds / self.countdown_interval ) ) )
                 if self.logit: print( f'countdown at {self.countdown_seconds} seconds')
@@ -118,6 +108,9 @@ class Timer_Window( Toplevel ):
         else:
             self.set_txt( '' )
             if self.logit: print( 'countdown complete')
+            self.attributes( '-alpha', self.normalpha )
+            self.config( bg=self.normbg )
+            self.lab.config( bg=self.normbg )
             self.countdown_complete = True
             self.countdown_active = False # clear in-countdown flag
             self.countdown_callback()
