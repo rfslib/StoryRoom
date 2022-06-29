@@ -1,13 +1,19 @@
 """
-    file: story_room.py
+    file: story_room.pyw
     author: Ed C
 
     references:
         https://stackoverflow.com/questions/36315156/how-do-i-run-multiple-tkinter-windows-simultaneously-in-python
+        obs websocket doc: https://github.com/obsproject/obs-websocket/blob/4.x-current/docs/generated/protocol.md
+        simple xface to obs websocket: https://github.com/IRLToolkit/simpleobsws/tree/simpleobsws-4.x (included, since pip installs an incompatible version)
+        starting a process from Python: https://docs.python.org/3/library/subprocess.html
 
     purpose: start Tk and set up windows for control of the Story Room recording system
             meant to run continuously
 """
+
+# TODO: Configuration File
+
 
 #from tkinter import *
 import tkinter as tk
@@ -19,6 +25,8 @@ from time import sleep
 
 import psutil
 import subprocess
+
+from sr_parm import SR_Parm as parms
 
 debug = 1
 
@@ -34,7 +42,7 @@ def is_process_running( processName ): # https://thispointer.com/python-check-if
                 return True
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
-            return False;
+            return False
 
 #set up window manager
 wm = tk.Tk()
@@ -49,14 +57,15 @@ tx.insert( tk.END, 'Story Room System starting....\n')
 tx.update()
 
 # TODO: be sure OBS is running
-if is_process_running( 'obs64.exe' ):
+if is_process_running(parms.obs_processname):
     tx.insert( tk.END, 'OBS is running\n')
     tx.update()
 else:
     tx.insert( tk.END, 'Need to start OBS\n')
     # TODO: needs environment/context, plus need to wait until it is fully running
     try:
-        subprocess.Popen(['"C:/Program Files/obs-studio/bin/64bit/obs64.exe"']) 
+        subprocess.Popen(parms.obs_command, cwd=parms.obs_directory)
+        sleep(5)
     except:
         tx.insert( tk.END, 'Could not start OBS. ABORTING\n')
         tx.update()
@@ -66,7 +75,7 @@ else:
 tx.insert( tk.END, 'Creating the Control Window\n')
 tx.update()
 
-control_win = Control_Window( wm )
+control_win = Control_Window(wm)
 
 tx.insert( tk.END, 'Initialization complete\n')
 tx.insert( tk.END, '\nUse the Control Window now')

@@ -2,15 +2,38 @@
     file: control_window.py
     author: ed c
 """
+
+# TODO: change to seconds remaining on final 2 minutes of recording
+# TODO: check that OBS is running and start it before starting countdown to recording start
+# TODO: button/function to stop recording early
+# TODO: check event against expected action and status
+# TODO: disable buttons when not valid
+# TODO: OBS portable mode (config settings are saved in the OBS main folder) see obsproject.com/forum/resources/obs-and-obs-studio-portable-mode-on-windows.359
+# TODO: OBS Event: 'SourceDestroyed', Raw data: {'sourceKind': 'scene', 'sourceName': 'Scene', 'sourceType': 'scene', 'update-type': 'SourceDestroyed'}: close app
+# TODO: capture OS events (i.e., close app, etc.)
+# TODO: catch OBS events (? under what conditions? connect() has to be active)
+# TODO: installer (installation instructions)
+# TODO: (OBS) create sources, lock configuration files
+# TODO: check, set Sources, Profile, Scene (create standards for these)
+# TODO: set filename format (SetFilenameFormatting)
+# TODO: QSG (have this app set all parameters so no manual settings are required)
+# TODO: warn on version mismatch for OBS, websockets and simpleobsws
+# TODO: catch errors
+# TODO: USB disconnect
+# DONE: warn on low disk space (use psutil.disk_usage(".").free/1024/1024/1024)
+
 import asyncio
 import simpleobsws
 from tkinter import *
+import psutil
 
-import time
+from sr_parm import SR_Parm as parms
 
 import timer_window
 
-class Control_Window( Toplevel ):
+free_disk = 0
+
+class Control_Window(Toplevel):
 
     debug = 1
 
@@ -47,16 +70,21 @@ class Control_Window( Toplevel ):
     # environment info
     free_disk = 0.0
 
-    def __init__( self, master ):
-        Toplevel.__init__(self,master)
+    sr_version = '0.1'
+
+    def __init__(self, master):
+        Toplevel.__init__(self, master)
 
         # set our look
-        self.config( bg=self.bgcolor)
-        self.overrideredirect( True )
+        self.config(bg=self.bgcolor)
+        self.overrideredirect(True) # don't show title 
+        self.attributes('-alpha', 1.0) # set transparency
+        self.attributes('-topmost', 1) # stay on top
+
     
         # get our size and location
-        self.mwidth = self.winfo_screenwidth( )
-        self.mheight = self.winfo_screenheight( )
+        self.mwidth = self.winfo_screenwidth()
+        self.mheight = self.winfo_screenheight()
         if self.debug:
             self.mwidth = int( self.mwidth / 2 ) 
             self.mheight = int( self.mheight / 2 ) 
@@ -64,6 +92,7 @@ class Control_Window( Toplevel ):
             self.moffsety = 48
         self.geometry( f'{self.mwidth}x{self.mheight}+{self.moffsetx}+{self.moffsety}')
         if self.debug: print( f'{self.mwidth}x{self.mheight}+{self.moffsetx}+{self.moffsety}' )
+        self.resizable(False, False)
 
         # set up the window's "title" frame
         self.ttlframe = Frame( master=self,
@@ -75,45 +104,44 @@ class Control_Window( Toplevel ):
             text=self.ttl, font=('Lucida Console', self.fontsize), bg=self.bgcolor, fg=self.fontcolor,
             ).pack( padx = self.padxy, pady = self.padxy)
 
-        # set up an interface to OBS Studio
-        self.loop = asyncio.get_event_loop()
-        self.ws = simpleobsws.obsws(host='127.0.0.1', port=4444, password=self.pswd, loop=self.loop)
-
-        # get some info from OBS
-        self.loop.run_until_complete( self.get_obs_info( ) )
-
         # "info" frame
-        self._infoline=StringVar()
-        self._diskline=StringVar()
-        self.set_infoline( f'OBS Studio version: {self.obs_version}, Websockets version: {self.ws_version}' )
-        self.set_diskline( f'Free Disk Space: {self.free_disk / 1024:.1f}G')
-        self.infframe = Frame( master=self,
-            bg=self.bgcolor, padx=self.padxy, pady=self.padxy )
-        self.infframe.grid( row=6, column=0, padx=self.padxy, pady=self.padxy, sticky = 'es' )
-        inflabel = Label( master=self.infframe, text=self._infoline.get(), fg=self.info_fontcolor,
-            font=( 'Lucida Console', self.info_fontsize ) ).pack( padx=self.padxy, pady=self.padxy )
-        dsklabel = Label( master=self.infframe, text=self._diskline.get(), fg=self.info_fontcolor,
-            font=( 'Lucida Console', self.info_fontsize ) ).pack( padx=self.padxy, pady=self.padxy )
+        self.infoline=StringVar()
+        self.diskline=StringVar()
+        #self.set_infoline(f'sr: {self.sr_version}, obs: {self.obs_version}, ws: {self.ws_version}')
+        self.set_diskline(f'Free Disk Space: {self.free_disk / 1024:.1f}G')
+        self.infframe = Frame(master=self, bg=self.bgcolor, padx=self.padxy, pady=self.padxy)
+        self.infframe.grid(row=6, column=0, padx=self.padxy, pady=self.padxy, sticky = 'es')
+        self.inflabel = Label(master=self.infframe, textvariable=self.infoline, fg=self.info_fontcolor, font=('Lucida Console', self.info_fontsize))
+        self.inflabel.pack(padx=self.padxy, pady=self.padxy)
+        self.dsklabel = Label(master=self.infframe, textvariable=self.diskline, fg=self.info_fontcolor, font=('Lucida Console', self.info_fontsize))
+        self.dsklabel.pack(padx=self.padxy, pady=self.padxy)
 
         # create a frame for interactions (buttons, text entry, etc.)
-        self.btnframe = Frame( master=self, 
-            padx = self.padxy, pady = self.padxy )
-        self.btnframe.grid( row=2, column=0, padx = self.padxy, pady = self.padxy, sticky='ewn' )
+        self.btnframe = Frame(master=self, padx=self.padxy, pady=self.padxy)
+        self.btnframe.grid(row=2, column=0, padx=self.padxy, pady=self.padxy, sticky='ewn')
         #Label( master=self.btnframe, text='' ).pack( padx = self.padxy, pady = self.padxy )
               
-        self.ctrl_strt= Button( self.btnframe, text = self.start_btn_txt,
-            height=self.start_btn_height,
-            command = self.schedule_recording,
-            font = ( self.font, self.start_btn_fontsize ) ).pack()
+        self.ctrl_strt= Button(self.btnframe, text=self.start_btn_txt, height=self.start_btn_height, command=self.session_init, font=(self.font, self.start_btn_fontsize))
+        self.ctrl_strt.pack()
 
-        if self.debug: print( 'control window ready' )
+        # set up an interface to OBS Studio
+        self.loop = asyncio.get_event_loop()
+        self.ws = simpleobsws.obsws(host='127.0.0.1', port=4444, password=self.pswd, loop=self.loop) # log in to websockets
+        #self.loop.run_until_complete(self.ws.connect()) # establish an open connection to websockets
+        self.ws.register(on_obs_event)
+        self.loop.run_until_complete( self.get_obs_info( ) )
+        self.set_infoline(f'sr: {self.sr_version}, obs: {self.obs_version}, ws: {self.ws_version}')
+
+        if self.debug: print('control window ready')
 
         # set up the timer window
-        self.tw = timer_window.Timer_Window( master )
-        self.tw.set_txt( self.timer_waiting_message )
-        if self.debug: print( 'timer window ready' )
+        self.tw = timer_window.Timer_Window(master)
+        self.tw.set_txt(self.timer_waiting_message)
+        if self.debug: print('timer window ready')
 
-        if self.debug: print( 'system ready' )
+        if self.debug: print('system ready')
+
+        self.show_disk_space()
 
 
 # ----
@@ -122,11 +150,11 @@ class Control_Window( Toplevel ):
         await self.ws.connect()
         info = await self.ws.call( 'GetVersion' )
         if self.debug: print( f'GetVersion: {info}')
-        self.obs_version = info[ 'obs-studio-version' ]
-        self.ws_version = info[ 'obs-websocket-version' ]
+        self.obs_version = info['obs-studio-version']
+        self.ws_version = info['obs-websocket-version']
+        self.obs_status = info['status']
         stats = await self.ws.call( 'GetStats' )
         if self.debug: print( f'GetStats: {stats}')
-        self.free_disk = float( stats[ 'stats' ][ 'free-disk-space' ] )
         await asyncio.sleep( 1 )
         await self.ws.disconnect()
 
@@ -150,27 +178,52 @@ class Control_Window( Toplevel ):
     def stop_recording( self ):
         self.loop.run_until_complete( self.__stop_recording( ) )
 
-    def test_callback( self ):
+    def session_start_recording( self ):
         print( 'test_callback called' )
+        self.start_recording()
+        self.tw.start_countdown('Recording time remaining: {} minutes', 120, 60, 60, self.session_end_recording)
 
-    def schedule_recording( self ):
-        self.tw.start_countdown( 'starting in {} seconds', 6, 1, 3, self.test_callback )
+    def session_end_recording(self):
+        self.stop_recording()
+        self.tw.set_txt('Recording Stopped')
+
+    def session_init( self ):
+        self.tw.start_countdown( 'Start recording in {} seconds', 10, 1, 5, self.session_start_recording )
 
     def start_session():
         pass
 
     def get_infoline( self ):
-        return self._infoline.get()
+        return self.infoline.get()
 
     def set_infoline( self, textin ):
-        self._infoline.set( str( textin ) )
-        #TODO: isn't this supposed to be automagic? self.infframe.update()
+        self.infoline.set( str( textin ) )
     
-    def get_diskline( self ):
-        return self._diskline.get()
+    def get_diskline(self):
+        return self.diskline.get()
 
-    def set_diskline( self, textin ):
-        self._diskline.set( str( textin ) )
+    def set_diskline(self, textin):
+        self.diskline.set(str(textin))
+
+    def show_disk_space(self):
+        self.free_disk = psutil.disk_usage('.').free / 1024 / 1024
+        print(f'free: {self.free_disk}, min:{parms.free_disk_min}')
+        if self.free_disk < parms.free_disk_min:
+            self.dsklabel.config( bg = parms.text_warn_color )
+        else:
+            self.dsklabel.config( bg = parms.bg_color )
+        self.diskline.set( f'Available disk space: {self.free_disk/1024:.1f}G ' )
+        self.after( parms.fd_delay, self.show_disk_space )
+
+async def on_obs_event(self, data):
+    print( f'OBS Event: \'{data["update-type"]}\', Raw data: {data}')
+    if data[ 'update-type' ] == 'SourceDestroyed':
+        print( 'OBS closed, forcing exit' )
+        #show_app_status( 'OBS closed, forcing exit' )
+        await asyncio.sleep( 3 )
+        self.tw.destroy()
+        self.destroy()
+        exit( )
     
 
 if __name__ == '__main__':

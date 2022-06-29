@@ -28,7 +28,6 @@ class Timer_Window( Toplevel ):
     countdown_string = '{} seconds remaining'
 
     ## attributes of the control window
-    #moffsetx = 0
     mwidth = 1920
     yoffset = 0
     xoffset = 0
@@ -59,7 +58,7 @@ class Timer_Window( Toplevel ):
 
         self._txt = StringVar()
         self._txt.set( 'waiting for start' )
-        self.lab = Label( master=self, textvariable=self._txt, font=('Lucida Console', self.fontsize), 
+        self.lab = Label( master=self, textvariable=self._txt, font=( self.font, self.fontsize), 
             fg=self.fontwarn, bg=self.warnbg
             )
         self.lab.pack( padx=self.padxy * 2, pady=self.padxy, side='left')
