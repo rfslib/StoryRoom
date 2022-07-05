@@ -1,68 +1,39 @@
 """
-    file: timer_window.py
-    author: ed c
+file: timer_window.py
+author: rfslib
 
-    references:
-        https://delfstack.com/howto/python-tkinter/how-to-change-the-tkinter-label-text
+references:
+    https://delfstack.com/howto/python-tkinter/how-to-change-the-tkinter-label-text
 
 """
-
-
-from itertools import count
-from subprocess import call
 from tkinter import *
-from turtle import color
+from sr_parm import SR_Parm as parms
 
-class Timer_Window( Toplevel ):
+class Timer_Window(Toplevel):
 
     debug = 0
     logit = 0
     foo = 0
-
-    ## countdown stuff
-    countdown_seconds = 10
-    countdown_active = False
-    countdown_complete = False
-    countdown_interval = 1
-    countdown_warn = 5
-    countdown_string = '{} seconds remaining'
-
-    ## attributes of the control window
-    mwidth = 1920
-    yoffset = 0
-    xoffset = 0
-    mheight = 100
-    font = 'Lucida Console'    # primary font for text
-    fontsize = 64              # font size
-    fontcolor = 'DarkGrey'
-    fontwarn = 'Black' # 'DarkRed'
-    normbg = 'Grey' # 'Grey'
-    warnbg = 'DarkRed'
-    normalpha = 0.5
-    warnalpha = 0.9
-    padxy = 4                   # padding inside of frames
-    btn_fontsize = 12
-
+   
     def __init__(self, master):
         Toplevel.__init__(self,master)
 
         # set our look
-        self.config( bg=self.normbg)
-        self.attributes( '-alpha', self.normalpha ) # set transparency
-        self.overrideredirect( True ) # hide the title bar
-        
+        self.config( bg=parms.tw_normbg)
+        self.attributes( '-alpha', parms.tw_normalpha ) # set transparency
+        self.overrideredirect( True ) # hide the title bar       
     
         # set our size and location
         self.xoffset = self.winfo_screenwidth( )
-        self.geometry( f'{self.mwidth}x{self.mheight}+{self.xoffset}+{self.yoffset}')
+        self.geometry( f'{parms.tw_mwidth}x{parms.tw_mheight}+{self.xoffset}+{parms.tw_yoffset}')
 
         self._txt = StringVar()
         self._txt.set( 'waiting for start' )
-        self.lab = Label( master=self, textvariable=self._txt, font=( self.font, self.fontsize), 
-            fg=self.fontwarn, bg=self.warnbg
+        self.lab = Label( master=self, textvariable=self._txt, font=( parms.tw_font, parms.tw_fontsize), 
+            fg=parms.tw_fontwarn, bg=parms.tw_warnbg
             )
-        self.lab.pack( padx=self.padxy * 2, pady=self.padxy, side='left')
-        self.lab.config( bg=self.normbg )
+        self.lab.pack( padx=parms.tw_padxy * 2, pady=parms.tw_padxy, side='left')
+        self.lab.config( bg=parms.tw_normbg )
 
         if self.debug: self.upd( )
         if self.logit: print( 'timer window ready' )
@@ -80,38 +51,38 @@ class Timer_Window( Toplevel ):
         self.after( 1000, self.upd )
 
     def start_countdown( self, textstring, seconds, interval, warn_at, callback ):
-        if self.countdown_active: return -1 # a countdown is already active, can't start another
-        self.countdown_active = True # set "in-countdown" flag
+        if self.tw_countdown_active: return -1 # a countdown is already active, can't start another
+        self.tw_countdown_active = True # set "in-countdown" flag
         if self.logit: print( f'count down {seconds} seconds, update every {interval} seconds')
-        self.countdown_string = textstring
+        self.tw_countdown_string = textstring
         self.countdown_callback = callback
-        self.countdown_seconds = seconds
-        self.countdown_interval = interval
-        self.countdown_warn = warn_at
-        self.countdown_complete = False
-        self.attributes( '-alpha', self.normalpha )
-        self.config( bg=self.normbg )
+        self.tw_countdown_seconds = seconds
+        self.tw_countdown_interval = interval
+        self.tw_countdown_warn = warn_at
+        self.tw_countdown_complete = False
+        self.attributes( '-alpha', parms.tw_normalpha )
+        self.config( bg=parms.tw_normbg )
         self.countdown()  # start the countdown
 
     def countdown( self ):
-        if self.countdown_seconds > 0:
-            if self.countdown_seconds <= self.countdown_warn:
-                self.attributes( '-alpha', self.warnalpha )
-                self.config( bg=self.warnbg )
-                self.lab.config( bg=self.warnbg )
-            if not ( self.countdown_seconds % self.countdown_interval ): # update at every 'interval'
-                self.set_txt( self.countdown_string.format( int( self.countdown_seconds / self.countdown_interval ) ) )
-                if self.logit: print( f'countdown at {self.countdown_seconds} seconds')
-            self.countdown_seconds -= 1
+        if self.tw_countdown_seconds > 0:
+            if self.tw_countdown_seconds <= self.tw_countdown_warn:
+                self.attributes( '-alpha', parms.tw_warnalpha )
+                self.config( bg=parms.tw_warnbg )
+                self.lab.config( bg=parms.tw_warnbg )
+            if not ( self.tw_countdown_seconds % self.tw_countdown_interval ): # update at every 'interval'
+                self.set_txt( self.tw_countdown_string.format( int( self.tw_countdown_seconds / self.tw_countdown_interval ) ) )
+                if self.logit: print( f'countdown at {self.tw_countdown_seconds} seconds')
+            self.tw_countdown_seconds -= 1
             self.after( 1000, self.countdown )
         else:
             self.set_txt( '' )
             if self.logit: print( 'countdown complete')
-            self.attributes( '-alpha', self.normalpha )
-            self.config( bg=self.normbg )
-            self.lab.config( bg=self.normbg )
-            self.countdown_complete = True
-            self.countdown_active = False # clear in-countdown flag
+            self.attributes( '-alpha', parms.tw_normalpha )
+            self.config( bg=parms.tw_normbg )
+            self.lab.config( bg=parms.tw_normbg )
+            self.tw_countdown_complete = True
+            self.tw_countdown_active = False # clear in-countdown flag
             self.countdown_callback()
 
     # TODO: def stop_countdown( self ) # normal stop, or early stop

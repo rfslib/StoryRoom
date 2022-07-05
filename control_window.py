@@ -2,7 +2,7 @@
     file: control_window.py
     author: ed c
 """
-
+# TODO: start OBS here or a separate class instead of startup so it can be checked/started from here
 # TODO: change to seconds remaining on final 2 minutes of recording
 # TODO: check that OBS is running and start it before starting countdown to recording start
 # TODO: button/function to stop recording early
@@ -23,11 +23,11 @@
 # DONE: warn on low disk space (use psutil.disk_usage(".").free/1024/1024/1024)
 
 import asyncio
-import simpleobsws
 from tkinter import *
 import psutil
 
 from sr_parm import SR_Parm as parms
+from obs_xface import OBS_Xface
 
 import timer_window
 
@@ -63,9 +63,7 @@ class Control_Window(Toplevel):
     
     # OBS info
     pswd = 'family'
-    obs_version = ''
-    ws_version = ''
-    obs_status = ''
+
 
     # environment info
     free_disk = 0.0
@@ -81,7 +79,6 @@ class Control_Window(Toplevel):
         self.attributes('-alpha', 1.0) # set transparency
         self.attributes('-topmost', 1) # stay on top
 
-    
         # get our size and location
         self.mwidth = self.winfo_screenwidth()
         self.mheight = self.winfo_screenheight()
@@ -119,18 +116,9 @@ class Control_Window(Toplevel):
         # create a frame for interactions (buttons, text entry, etc.)
         self.btnframe = Frame(master=self, padx=self.padxy, pady=self.padxy)
         self.btnframe.grid(row=2, column=0, padx=self.padxy, pady=self.padxy, sticky='ewn')
-        #Label( master=self.btnframe, text='' ).pack( padx = self.padxy, pady = self.padxy )
               
         self.ctrl_strt= Button(self.btnframe, text=self.start_btn_txt, height=self.start_btn_height, command=self.session_init, font=(self.font, self.start_btn_fontsize))
         self.ctrl_strt.pack()
-
-        # set up an interface to OBS Studio
-        self.loop = asyncio.get_event_loop()
-        self.ws = simpleobsws.obsws(host='127.0.0.1', port=4444, password=self.pswd, loop=self.loop) # log in to websockets
-        #self.loop.run_until_complete(self.ws.connect()) # establish an open connection to websockets
-        self.ws.register(on_obs_event)
-        self.loop.run_until_complete( self.get_obs_info( ) )
-        self.set_infoline(f'sr: {self.sr_version}, obs: {self.obs_version}, ws: {self.ws_version}')
 
         if self.debug: print('control window ready')
 
@@ -139,59 +127,38 @@ class Control_Window(Toplevel):
         self.tw.set_txt(self.timer_waiting_message)
         if self.debug: print('timer window ready')
 
-        if self.debug: print('system ready')
+        self.ws = OBS_Xface(host=parms.obs_host, port=parms.obs_port, password=parms.obs_pswd, callback=self.on_obs_event)
+
+        self.set_infoline(f'sr: {self.sr_version}, obs: {self.ws.obs_version}, ws: {self.ws.ws_version}')
 
         self.show_disk_space()
+
+        if self.debug: print('system ready')
 
 
 # ----
 
-    async def get_obs_info( self ):
-        await self.ws.connect()
-        info = await self.ws.call( 'GetVersion' )
-        if self.debug: print( f'GetVersion: {info}')
-        self.obs_version = info['obs-studio-version']
-        self.ws_version = info['obs-websocket-version']
-        self.obs_status = info['status']
-        stats = await self.ws.call( 'GetStats' )
-        if self.debug: print( f'GetStats: {stats}')
-        await asyncio.sleep( 1 )
-        await self.ws.disconnect()
+    async def on_obs_event(self, data):
+        if data['update-type'] == 'SourceDestroyed':
+            print('OBS closed so forcing exit')
+            self.show_app_status('OBS closed so forcing exit')
+            await asyncio.sleep( 3 )
+            self.tw.destroy()
+            self.destroy()
+            exit(-1)
+        pass # TODO: finish me
 
-    async def __start_recording( self ):
-        await self.ws.connect()
-        rc = await self.ws.call( 'StartRecording' )
-        print( f'start_recording rc: {rc}')
-        await asyncio.sleep( 1 )
-        await self.ws.disconnect( )
-
-    def start_recording( self ):
-        self.loop.run_until_complete( self.__start_recording( ) )
-
-    async def __stop_recording( self ):
-        await self.ws.connect()
-        rc = await self.ws.call( 'StopRecording' )
-        print( f'stop_recording rc: {rc}')
-        await asyncio.sleep( 1 )
-        await self.ws.disconnect( )
-
-    def stop_recording( self ):
-        self.loop.run_until_complete( self.__stop_recording( ) )
+    def session_init(self):
+        self.tw.start_countdown('Start recording in {} seconds', 5, 1, 5, self.session_start_recording)
 
     def session_start_recording( self ):
         print( 'test_callback called' )
-        self.start_recording()
+        self.ws.start_recording()
         self.tw.start_countdown('Recording time remaining: {} minutes', 120, 60, 60, self.session_end_recording)
 
     def session_end_recording(self):
-        self.stop_recording()
+        self.ws.stop_recording()
         self.tw.set_txt('Recording Stopped')
-
-    def session_init( self ):
-        self.tw.start_countdown( 'Start recording in {} seconds', 10, 1, 5, self.session_start_recording )
-
-    def start_session():
-        pass
 
     def get_infoline( self ):
         return self.infoline.get()
@@ -213,18 +180,7 @@ class Control_Window(Toplevel):
         else:
             self.dsklabel.config( bg = parms.bg_color )
         self.diskline.set( f'Available disk space: {self.free_disk/1024:.1f}G ' )
-        self.after( parms.fd_delay, self.show_disk_space )
-
-async def on_obs_event(self, data):
-    print( f'OBS Event: \'{data["update-type"]}\', Raw data: {data}')
-    if data[ 'update-type' ] == 'SourceDestroyed':
-        print( 'OBS closed, forcing exit' )
-        #show_app_status( 'OBS closed, forcing exit' )
-        await asyncio.sleep( 3 )
-        self.tw.destroy()
-        self.destroy()
-        exit( )
-    
+        self.after( parms.fd_delay, self.show_disk_space )    
 
 if __name__ == '__main__':
     root = Tk()
