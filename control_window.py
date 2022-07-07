@@ -127,13 +127,14 @@ class Control_Window(Toplevel):
         self.tw.set_txt(self.timer_waiting_message)
         if self.debug: print('timer window ready')
 
+    # get OBS going
         self.ws = OBS_Xface(host=parms.obs_host, port=parms.obs_port, password=parms.obs_pswd, callback=self.on_obs_event)
-
-        self.set_infoline(f'sr: {self.sr_version}, obs: {self.ws.obs_version}, ws: {self.ws.ws_version}')
-
-        self.show_disk_space()
-
-        if self.debug: print('system ready')
+        if self.ws == None:
+            self.set_infoline('OBS Startup Failed. Restart the System.')
+        else:
+            self.set_infoline(f'sr: {self.sr_version}, obs: {self.ws.obs_version}, ws: {self.ws.ws_version}')
+            self.show_disk_space()
+            if self.debug: print('system ready')
 
 
 # ----

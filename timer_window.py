@@ -14,6 +14,14 @@ class Timer_Window(Toplevel):
     debug = 0
     logit = 0
     foo = 0
+
+    ## countdown stuff
+    tw_countdown_seconds = 10
+    tw_countdown_active = False
+    tw_countdown_complete = False
+    tw_countdown_interval = 1
+    tw_countdown_warn = 5
+    tw_countdown_string = '{} seconds remaining'
    
     def __init__(self, master):
         Toplevel.__init__(self,master)

@@ -34,13 +34,7 @@ class SR_Parm():
     obs_port = 4444
 
     # timer_window
-    ## countdown stuff
-    tw_countdown_seconds = 10
-    tw_countdown_active = False
-    tw_countdown_complete = False
-    tw_countdown_interval = 1
-    tw_countdown_warn = 5
-    tw_countdown_string = '{} seconds remaining'
+
 
     ## attributes of the timer window
     tw_mwidth = 1920

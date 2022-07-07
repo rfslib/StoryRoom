@@ -5,6 +5,7 @@
     purpose: a simplified interface to manage obs startup and status for story_room
 """
 
+from signal import raise_signal
 from sr_parm import SR_Parm as parms
 
 import asyncio
@@ -33,6 +34,9 @@ class OBS_Xface(obsws):
             self.register(self.on_obs_event)
             self.loop.run_until_complete(self.get_obs_info())
 
+        else:
+            return None
+
     async def get_obs_info(self):
         await self.connect()
         info = await self.call( 'GetVersion' )
@@ -56,7 +60,7 @@ class OBS_Xface(obsws):
                 # Check if process name contains the given name string.
                 if processName.lower() in proc.name().lower():
                     return True
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            except: # (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 return False
 
     def obs_is_running(self):
@@ -78,7 +82,8 @@ class OBS_Xface(obsws):
 
     async def on_obs_event(self, data):
         print( f'OBS Event: \'{data["update-type"]}\', Raw data: {data}')
-        self.loop.run_until_complete(self.callback(data))
+        await self.callback(data)
+        #self.loop.run_until_complete(self.callback(data))
         
     async def __start_recording( self ):
         await self.connect()
