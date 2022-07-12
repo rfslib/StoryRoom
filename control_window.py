@@ -23,11 +23,12 @@
 # DONE: warn on low disk space (use psutil.disk_usage(".").free/1024/1024/1024)
 
 import asyncio
+from cgitb import enable
 from tkinter import *
 import psutil
 
 from sr_parm import SR_Parm as parms
-from obs_xface import OBS_Xface
+from obs_xface import OBS_Xface, OBS_Error
 
 import timer_window
 
@@ -64,11 +65,10 @@ class Control_Window(Toplevel):
     # OBS info
     pswd = 'family'
 
-
     # environment info
     free_disk = 0.0
 
-    sr_version = '0.1'
+    sr_version = '0.2'
 
     def __init__(self, master):
         Toplevel.__init__(self, master)
@@ -101,41 +101,50 @@ class Control_Window(Toplevel):
             text=self.ttl, font=('Lucida Console', self.fontsize), bg=self.bgcolor, fg=self.fontcolor,
             ).pack( padx = self.padxy, pady = self.padxy)
 
+        # create a frame for interactions (buttons, text entry, etc.)
+        self.btnframe = Frame(master=self, padx=self.padxy, pady=self.padxy)
+        self.btnframe.grid(row=2, column=0, padx=self.padxy, pady=self.padxy, sticky='ewn')
+        self.ctrl_strt= Button(self.btnframe, text=self.start_btn_txt, height=self.start_btn_height, command=self.session_init, font=(self.font, self.start_btn_fontsize))
+        self.ctrl_strt.pack()
+        self.ctrl_strt['state'] = DISABLED
+        self.update
+
         # "info" frame
         self.infoline=StringVar()
         self.diskline=StringVar()
         #self.set_infoline(f'sr: {self.sr_version}, obs: {self.obs_version}, ws: {self.ws_version}')
-        self.set_diskline(f'Free Disk Space: {self.free_disk / 1024:.1f}G')
+        self.set_diskline(f'Available disk space: ????? ')
         self.infframe = Frame(master=self, bg=self.bgcolor, padx=self.padxy, pady=self.padxy)
         self.infframe.grid(row=6, column=0, padx=self.padxy, pady=self.padxy, sticky = 'es')
         self.inflabel = Label(master=self.infframe, textvariable=self.infoline, fg=self.info_fontcolor, font=('Lucida Console', self.info_fontsize))
         self.inflabel.pack(padx=self.padxy, pady=self.padxy)
         self.dsklabel = Label(master=self.infframe, textvariable=self.diskline, fg=self.info_fontcolor, font=('Lucida Console', self.info_fontsize))
         self.dsklabel.pack(padx=self.padxy, pady=self.padxy)
-
-        # create a frame for interactions (buttons, text entry, etc.)
-        self.btnframe = Frame(master=self, padx=self.padxy, pady=self.padxy)
-        self.btnframe.grid(row=2, column=0, padx=self.padxy, pady=self.padxy, sticky='ewn')
+        self.update()
               
-        self.ctrl_strt= Button(self.btnframe, text=self.start_btn_txt, height=self.start_btn_height, command=self.session_init, font=(self.font, self.start_btn_fontsize))
-        self.ctrl_strt.pack()
-
         if self.debug: print('control window ready')
 
         # set up the timer window
         self.tw = timer_window.Timer_Window(master)
         self.tw.set_txt(self.timer_waiting_message)
+        
         if self.debug: print('timer window ready')
 
-    # get OBS going
-        self.ws = OBS_Xface(host=parms.obs_host, port=parms.obs_port, password=parms.obs_pswd, callback=self.on_obs_event)
-        if self.ws == None:
-            self.set_infoline('OBS Startup Failed. Restart the System.')
+        # get OBS going
+        self.set_infoline('Starting OBS')
+        self.update()
+        try:
+            self.ws = OBS_Xface(host=parms.obs_host, port=parms.obs_port, password=parms.obs_pswd, callback=self.on_obs_event)
+        except (OBS_Error) as err:
+            print(f'When starting OBS: "{err}"')
+            self.set_infoline('OBS Startup Failed. Restart the System.', text_color=parms.text_warn_color)
         else:
             self.set_infoline(f'sr: {self.sr_version}, obs: {self.ws.obs_version}, ws: {self.ws.ws_version}')
             self.show_disk_space()
             if self.debug: print('system ready')
 
+        self.ctrl_strt['state'] = NORMAL
+        self.update()
 
 # ----
 
@@ -153,7 +162,7 @@ class Control_Window(Toplevel):
         self.tw.start_countdown('Start recording in {} seconds', 5, 1, 5, self.session_start_recording)
 
     def session_start_recording( self ):
-        print( 'test_callback called' )
+        self.ctrl_strt['state'] = DISABLED
         self.ws.start_recording()
         self.tw.start_countdown('Recording time remaining: {} minutes', 120, 60, 60, self.session_end_recording)
 
@@ -164,8 +173,9 @@ class Control_Window(Toplevel):
     def get_infoline( self ):
         return self.infoline.get()
 
-    def set_infoline( self, textin ):
-        self.infoline.set( str( textin ) )
+    def set_infoline( self, textin, text_color=parms.text_soft_color ):
+        self.inflabel.config(fg=text_color)
+        self.infoline.set(str(textin))
     
     def get_diskline(self):
         return self.diskline.get()
@@ -180,7 +190,7 @@ class Control_Window(Toplevel):
             self.dsklabel.config( bg = parms.text_warn_color )
         else:
             self.dsklabel.config( bg = parms.bg_color )
-        self.diskline.set( f'Available disk space: {self.free_disk/1024:.1f}G ' )
+        self.set_diskline( f'Available disk space: {self.free_disk/1024:.1f}G ' )
         self.after( parms.fd_delay, self.show_disk_space )    
 
 if __name__ == '__main__':

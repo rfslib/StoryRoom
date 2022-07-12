@@ -23,6 +23,8 @@ class SR_Parm():
 
     # OBS
     obs_processname = 'obs64.exe'
+    obs_start_wait_tries = 8 # The first time after a reboot may take a while
+    obs_start_wait_delay = 2
     obs_command = r'C:\Program Files\obs-studio\bin\64bit\obs64.exe'
     obs_directory = r'C:\Program Files\obs-studio\bin\64bit'
     obs_startup_parms = '--disable-updater'
