@@ -2,15 +2,18 @@
     file: control_window.py
     author: ed c
 """
-# TODO: start OBS here or a separate class instead of startup so it can be checked/started from here
+
+# TODO: finish logic to abort recording (countdown to start vs middle of recording)
 # TODO: change to seconds remaining on final 2 minutes of recording
 # TODO: check that OBS is running and start it before starting countdown to recording start
 # TODO: button/function to stop recording early
+# TODO: periodically check OBS status (every nn seconds)
 # TODO: check event against expected action and status
 # TODO: disable buttons when not valid
 # TODO: OBS portable mode (config settings are saved in the OBS main folder) see obsproject.com/forum/resources/obs-and-obs-studio-portable-mode-on-windows.359
 # TODO: OBS Event: 'SourceDestroyed', Raw data: {'sourceKind': 'scene', 'sourceName': 'Scene', 'sourceType': 'scene', 'update-type': 'SourceDestroyed'}: close app
 # TODO: capture OS events (i.e., close app, etc.)
+# TODO: detect USB drive, copy file at end of recording, unmount USB drive
 # TODO: catch OBS events (? under what conditions? connect() has to be active)
 # TODO: installer (installation instructions)
 # TODO: (OBS) create sources, lock configuration files
@@ -18,9 +21,9 @@
 # TODO: set filename format (SetFilenameFormatting)
 # TODO: QSG (have this app set all parameters so no manual settings are required)
 # TODO: warn on version mismatch for OBS, websockets and simpleobsws
-# TODO: catch errors
 # TODO: USB disconnect
 # DONE: warn on low disk space (use psutil.disk_usage(".").free/1024/1024/1024)
+# DONE: start OBS here or a separate class instead of startup so it can be checked/started from here
 
 import asyncio
 from cgitb import enable
@@ -48,6 +51,7 @@ class Control_Window(Toplevel):
     start_btn_txt = 'Start Session'
     start_btn_height = 4
     start_btn_fontsize = 12
+    stop_btn_txt = 'End Session'
 
     ## attributes of the control window
     moffsetx = 0
@@ -95,7 +99,7 @@ class Control_Window(Toplevel):
         self.ttlframe = Frame( master=self,
             relief = RIDGE, borderwidth = 5, bg=self.bgcolor,
             padx = self.padxy, pady = self.padxy )
-        self.ttlframe.grid( row=0, column=0, padx = self.padxy, pady = self.padxy, sticky='ew' )
+        self.ttlframe.grid(row=0, column=0, columnspan=3, padx=self.padxy, pady=self.padxy, sticky='ew')
         self.grid_columnconfigure( 0, weight=1 )
         Label( master=self.ttlframe, # width=30,
             text=self.ttl, font=('Lucida Console', self.fontsize), bg=self.bgcolor, fg=self.fontcolor,
@@ -105,14 +109,17 @@ class Control_Window(Toplevel):
         self.btnframe = Frame(master=self, padx=self.padxy, pady=self.padxy)
         self.btnframe.grid(row=2, column=0, padx=self.padxy, pady=self.padxy, sticky='ewn')
         self.ctrl_strt= Button(self.btnframe, text=self.start_btn_txt, height=self.start_btn_height, command=self.session_init, font=(self.font, self.start_btn_fontsize))
-        self.ctrl_strt.pack()
+        self.ctrl_strt.grid(row=0, column=0, padx=4, pady=4)
         self.ctrl_strt['state'] = DISABLED
+        self.ctrl_stop= Button(self.btnframe, text=self.stop_btn_txt, height=self.start_btn_height, command=self.session_stop, font=(self.font, self.start_btn_fontsize))
+        self.ctrl_stop.grid(row=0, column=1, padx=4, pady=4)
+        self.ctrl_stop['state'] = DISABLED
+
         self.update
 
         # "info" frame
         self.infoline=StringVar()
         self.diskline=StringVar()
-        #self.set_infoline(f'sr: {self.sr_version}, obs: {self.obs_version}, ws: {self.ws_version}')
         self.set_diskline(f'Available disk space: ????? ')
         self.infframe = Frame(master=self, bg=self.bgcolor, padx=self.padxy, pady=self.padxy)
         self.infframe.grid(row=6, column=0, padx=self.padxy, pady=self.padxy, sticky = 'es')
@@ -164,11 +171,18 @@ class Control_Window(Toplevel):
     def session_start_recording( self ):
         self.ctrl_strt['state'] = DISABLED
         self.ws.start_recording()
+        self.ctrl_stop['state'] = NORMAL
         self.tw.start_countdown('Recording time remaining: {} minutes', 120, 60, 60, self.session_end_recording)
 
     def session_end_recording(self):
+        self.ctrl_stop['state'] = DISABLED
         self.ws.stop_recording()
         self.tw.set_txt('Recording Stopped')
+        # TODO: copy to USB, save to archive, reset parms, enable start button
+
+    def session_stop(self): # early stop of recording
+        if self.debug: print('early stop of current recording')
+        self.tw.stop_countdown # tell timer window to abort countdown; it will still use the configured callback to end
 
     def get_infoline( self ):
         return self.infoline.get()

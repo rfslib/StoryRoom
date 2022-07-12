@@ -10,7 +10,6 @@ from tkinter import *
 from sr_parm import SR_Parm as parms
 
 class Timer_Window(Toplevel):
-
     debug = 0
     logit = 0
     foo = 0
@@ -22,6 +21,7 @@ class Timer_Window(Toplevel):
     tw_countdown_interval = 1
     tw_countdown_warn = 5
     tw_countdown_string = '{} seconds remaining'
+    tw_countdown_abort = False
    
     def __init__(self, master):
         Toplevel.__init__(self,master)
@@ -68,12 +68,25 @@ class Timer_Window(Toplevel):
         self.tw_countdown_interval = interval
         self.tw_countdown_warn = warn_at
         self.tw_countdown_complete = False
+        self.tw_countdown_abort = False
         self.attributes( '-alpha', parms.tw_normalpha )
         self.config( bg=parms.tw_normbg )
         self.countdown()  # start the countdown
 
+    def stop_countdown(self): # tell the current countdown to stop early
+        self.tw_countdown_abort = True
+
     def countdown( self ):
-        if self.tw_countdown_seconds > 0:
+        if self.tw_countdown_abort: # early stop flag set
+            self.set_txt('Stopped')
+            if self.logit: print( 'countdown aborted')
+            self.attributes( '-alpha', parms.tw_normalpha )
+            self.config( bg=parms.tw_normbg )
+            self.lab.config( bg=parms.tw_normbg )
+            self.tw_countdown_complete = True
+            self.tw_countdown_active = False # clear in-countdown flag
+            self.countdown_callback()
+        elif self.tw_countdown_seconds > 0: # still time left
             if self.tw_countdown_seconds <= self.tw_countdown_warn:
                 self.attributes( '-alpha', parms.tw_warnalpha )
                 self.config( bg=parms.tw_warnbg )
@@ -83,7 +96,7 @@ class Timer_Window(Toplevel):
                 if self.logit: print( f'countdown at {self.tw_countdown_seconds} seconds')
             self.tw_countdown_seconds -= 1
             self.after( 1000, self.countdown )
-        else:
+        else: # time is up
             self.set_txt( '' )
             if self.logit: print( 'countdown complete')
             self.attributes( '-alpha', parms.tw_normalpha )

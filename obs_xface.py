@@ -49,7 +49,6 @@ class OBS_Xface(obsws):
             print('we didn\'t get OBS to run; returning None')
             raise OBS_Error("could not start OBS")
 
-
     async def get_obs_info(self):
         await self.connect()
         info = await self.call( 'GetVersion' )
@@ -63,11 +62,8 @@ class OBS_Xface(obsws):
         await asyncio.sleep( 1 )
         await self.disconnect()
 
-    def is_process_running(self, processName): # https://thispointer.com/python-check-if-a-process-is-running-by-name-and-find-its-process-id-pid/
-        '''
-        Check if there is any running process that contains the given name processName.
-        '''
-        #Iterate over the all the running process
+    def is_process_running(self, processName):
+        # scan all the running processes for processName
         if debug: print(f'checking if {processName} is running')
         for proc in psutil.process_iter():
             if processName.lower() in proc.name().lower():
