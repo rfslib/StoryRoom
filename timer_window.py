@@ -20,6 +20,7 @@ class Timer_Window(Toplevel):
     tw_countdown_complete = False
     tw_countdown_interval = 1
     tw_countdown_warn = 5
+    tw_countdown_return = 0 # non-zero value means exec callback at n seconds
     tw_countdown_string = '{} seconds remaining'
     tw_countdown_abort = False
    
@@ -29,7 +30,8 @@ class Timer_Window(Toplevel):
         # set our look
         self.config( bg=parms.tw_normbg)
         self.attributes( '-alpha', parms.tw_normalpha ) # set transparency
-        self.overrideredirect( True ) # hide the title bar       
+        self.overrideredirect( True ) # hide the title bar  
+        self.attributes('-topmost', 1) # stay on top     
     
         # set our size and location
         self.xoffset = self.winfo_screenwidth( )
@@ -58,7 +60,7 @@ class Timer_Window(Toplevel):
         self.foo += 1
         self.after( 1000, self.upd )
 
-    def start_countdown( self, textstring, seconds, interval, warn_at, callback ):
+    def start_countdown( self, textstring: str, seconds:int , interval: int, warn_at: int, return_at: int, callback ):
         if self.tw_countdown_active: return -1 # a countdown is already active, can't start another
         self.tw_countdown_active = True # set "in-countdown" flag
         if self.logit: print( f'count down {seconds} seconds, update every {interval} seconds')
@@ -67,13 +69,15 @@ class Timer_Window(Toplevel):
         self.tw_countdown_seconds = seconds
         self.tw_countdown_interval = interval
         self.tw_countdown_warn = warn_at
+        self.tw_countdown_return = return_at
         self.tw_countdown_complete = False
         self.tw_countdown_abort = False
         self.attributes( '-alpha', parms.tw_normalpha )
         self.config( bg=parms.tw_normbg )
         self.countdown()  # start the countdown
 
-    def stop_countdown(self): # tell the current countdown to stop early
+    def stop_countdown(self, new_callback): # tell the current countdown to stop early
+        self.countdown_callback = new_callback
         self.tw_countdown_abort = True
 
     def countdown( self ):
@@ -86,7 +90,7 @@ class Timer_Window(Toplevel):
             self.tw_countdown_complete = True
             self.tw_countdown_active = False # clear in-countdown flag
             self.countdown_callback()
-        elif self.tw_countdown_seconds > 0: # still time left
+        elif self.tw_countdown_seconds > self.tw_countdown_return: # still time left
             if self.tw_countdown_seconds <= self.tw_countdown_warn:
                 self.attributes( '-alpha', parms.tw_warnalpha )
                 self.config( bg=parms.tw_warnbg )

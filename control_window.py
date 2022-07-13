@@ -3,13 +3,11 @@
     author: ed c
 """
 
-# TODO: finish logic to abort recording (countdown to start vs middle of recording)
-# TODO: change to seconds remaining on final 2 minutes of recording
+# TODO: detect USB drive and available space (NOTE: only one USB port will be physically exposed, so this will be the non-C: drive)
+# TODO: get the desired filename
 # TODO: check that OBS is running and start it before starting countdown to recording start
-# TODO: button/function to stop recording early
 # TODO: periodically check OBS status (every nn seconds)
 # TODO: check event against expected action and status
-# TODO: disable buttons when not valid
 # TODO: OBS portable mode (config settings are saved in the OBS main folder) see obsproject.com/forum/resources/obs-and-obs-studio-portable-mode-on-windows.359
 # TODO: OBS Event: 'SourceDestroyed', Raw data: {'sourceKind': 'scene', 'sourceName': 'Scene', 'sourceType': 'scene', 'update-type': 'SourceDestroyed'}: close app
 # TODO: capture OS events (i.e., close app, etc.)
@@ -22,11 +20,14 @@
 # TODO: QSG (have this app set all parameters so no manual settings are required)
 # TODO: warn on version mismatch for OBS, websockets and simpleobsws
 # TODO: USB disconnect
+# DONE: disable buttons when not valid
+# DONE: finish logic to abort recording (countdown to start vs middle of recording)
+# DONE: button/function to stop recording early
+# DONE: change to seconds remaining on final 2 minutes of recording
 # DONE: warn on low disk space (use psutil.disk_usage(".").free/1024/1024/1024)
 # DONE: start OBS here or a separate class instead of startup so it can be checked/started from here
 
 import asyncio
-from cgitb import enable
 from tkinter import *
 import psutil
 
@@ -37,37 +38,20 @@ import timer_window
 
 free_disk = 0
 
+class Recording_State:
+    INIT = 0
+    READY = 1
+    COUNTDOWN = 2
+    RECORDING = 3
+    FINISHING = 4
+    CLEANUP = 5
+    ABORTING = -1
+
 class Control_Window(Toplevel):
 
     debug = 1
 
-    # configuration stuff
-    timer_waiting_message = 'Riverton Story Room'
-    countdown_to_start = 20 # 20 seconds
-    recording_length = 3600 # one hour of recording = 3600 seconds
-    recording_warn_at = 120 # seconds before end of recording to start warning message
-
-    # visuals
-    start_btn_txt = 'Start Session'
-    start_btn_height = 4
-    start_btn_fontsize = 12
-    stop_btn_txt = 'End Session'
-
-    ## attributes of the control window
-    moffsetx = 0
-    moffsety = 0
-    ttl = 'Story Room'       # title
-    font = 'Lucida Console'    # primary font for text
-    fontsize = 48              # font size
-    fontcolor = '#100010'
-    bgcolor = '#efffef'             # background color
-    padxy = 4                   # padding inside of frames
-    info_fontsize = 10
-    info_fontcolor = 'grey'
-    #infoline = '' # StringVar, created in __init__, see getter and setter
-    
-    # OBS info
-    pswd = 'family'
+    state = Recording_State.INIT
 
     # environment info
     free_disk = 0.0
@@ -77,8 +61,10 @@ class Control_Window(Toplevel):
     def __init__(self, master):
         Toplevel.__init__(self, master)
 
+        self.state = Recording_State.INIT
+
         # set our look
-        self.config(bg=self.bgcolor)
+        self.config(bg=parms.bgcolor)
         self.overrideredirect(True) # don't show title 
         self.attributes('-alpha', 1.0) # set transparency
         self.attributes('-topmost', 1) # stay on top
@@ -86,6 +72,8 @@ class Control_Window(Toplevel):
         # get our size and location
         self.mwidth = self.winfo_screenwidth()
         self.mheight = self.winfo_screenheight()
+        self.moffsetx = 0
+        self.moffsety = 0
         if self.debug:
             self.mwidth = int( self.mwidth / 2 ) 
             self.mheight = int( self.mheight / 2 ) 
@@ -96,44 +84,42 @@ class Control_Window(Toplevel):
         self.resizable(False, False)
 
         # set up the window's "title" frame
-        self.ttlframe = Frame( master=self,
-            relief = RIDGE, borderwidth = 5, bg=self.bgcolor,
-            padx = self.padxy, pady = self.padxy )
-        self.ttlframe.grid(row=0, column=0, columnspan=3, padx=self.padxy, pady=self.padxy, sticky='ew')
+        self.ttlframe = Frame( master=self, relief = RIDGE, borderwidth=5, bg=parms.bgcolor, padx=parms.padxy, pady=parms.padxy )
+        self.ttlframe.grid(row=0, column=0, columnspan=3, padx=parms.padxy, pady=parms.padxy, sticky='ew')
         self.grid_columnconfigure( 0, weight=1 )
-        Label( master=self.ttlframe, # width=30,
-            text=self.ttl, font=('Lucida Console', self.fontsize), bg=self.bgcolor, fg=self.fontcolor,
-            ).pack( padx = self.padxy, pady = self.padxy)
+        self.ttllbl = Label(master=self.ttlframe, text=parms.ttl, font=(parms.font_bold, parms.fontsize), bg=parms.bgcolor, fg=parms.fontcolor)
+        self.ttllbl.pack(padx=parms.padxy, pady=parms.padxy)
 
         # create a frame for interactions (buttons, text entry, etc.)
-        self.btnframe = Frame(master=self, padx=self.padxy, pady=self.padxy)
-        self.btnframe.grid(row=2, column=0, padx=self.padxy, pady=self.padxy, sticky='ewn')
-        self.ctrl_strt= Button(self.btnframe, text=self.start_btn_txt, height=self.start_btn_height, command=self.session_init, font=(self.font, self.start_btn_fontsize))
-        self.ctrl_strt.grid(row=0, column=0, padx=4, pady=4)
+        self.btnframe = Frame(master=self, padx=parms.padxy, pady=parms.padxy)
+        self.btnframe.grid(row=2, column=0, padx=parms.padxy, pady=parms.padxy, sticky='ewn')
+        self.ctrl_strt= Button(self.btnframe, text=parms.start_btn_txt, height=parms.start_btn_height, font=(parms.font_bold, parms.btn_fontsize),
+            command=self.session_init)
+        self.ctrl_strt.grid(row=0, column=0, padx=parms.padxy, pady=parms.padxy)
         self.ctrl_strt['state'] = DISABLED
-        self.ctrl_stop= Button(self.btnframe, text=self.stop_btn_txt, height=self.start_btn_height, command=self.session_stop, font=(self.font, self.start_btn_fontsize))
-        self.ctrl_stop.grid(row=0, column=1, padx=4, pady=4)
+        self.ctrl_stop= Button(self.btnframe, text=parms.stop_btn_txt, height=parms.start_btn_height, font=(parms.font_bold, parms.btn_fontsize),
+            command=self.session_stop)
+        self.ctrl_stop.grid(row=0, column=1, padx=parms.padxy, pady=parms.padxy)
         self.ctrl_stop['state'] = DISABLED
-
         self.update
 
         # "info" frame
         self.infoline=StringVar()
         self.diskline=StringVar()
         self.set_diskline(f'Available disk space: ????? ')
-        self.infframe = Frame(master=self, bg=self.bgcolor, padx=self.padxy, pady=self.padxy)
-        self.infframe.grid(row=6, column=0, padx=self.padxy, pady=self.padxy, sticky = 'es')
-        self.inflabel = Label(master=self.infframe, textvariable=self.infoline, fg=self.info_fontcolor, font=('Lucida Console', self.info_fontsize))
-        self.inflabel.pack(padx=self.padxy, pady=self.padxy)
-        self.dsklabel = Label(master=self.infframe, textvariable=self.diskline, fg=self.info_fontcolor, font=('Lucida Console', self.info_fontsize))
-        self.dsklabel.pack(padx=self.padxy, pady=self.padxy)
+        self.infframe = Frame(master=self, bg=parms.bgcolor, padx=parms.padxy, pady=parms.padxy)
+        self.infframe.grid(row=6, column=0, padx=parms.padxy, pady=parms.padxy, sticky = 'es')
+        self.inflabel = Label(master=self.infframe, textvariable=self.infoline, fg=parms.info_fontcolor, font=(parms.font_family, parms.info_fontsize))
+        self.inflabel.pack(padx=parms.padxy, pady=parms.padxy)
+        self.dsklabel = Label(master=self.infframe, textvariable=self.diskline, fg=parms.info_fontcolor, font=(parms.font_family, parms.info_fontsize))
+        self.dsklabel.pack(padx=parms.padxy, pady=parms.padxy)
         self.update()
               
         if self.debug: print('control window ready')
 
         # set up the timer window
         self.tw = timer_window.Timer_Window(master)
-        self.tw.set_txt(self.timer_waiting_message)
+        self.tw.set_txt(parms.timer_waiting_message)
         
         if self.debug: print('timer window ready')
 
@@ -153,6 +139,8 @@ class Control_Window(Toplevel):
         self.ctrl_strt['state'] = NORMAL
         self.update()
 
+        self.state = Recording_State.READY
+
 # ----
 
     async def on_obs_event(self, data):
@@ -166,23 +154,45 @@ class Control_Window(Toplevel):
         pass # TODO: finish me
 
     def session_init(self):
-        self.tw.start_countdown('Start recording in {} seconds', 5, 1, 5, self.session_start_recording)
+        self.state = Recording_State.COUNTDOWN
+        # TODO: detect USB drive and available space (NOTE: only one USB port will be physically exposed, so this will be the non-C: drive)
+        # TODO: get the desired filename
+        self.ctrl_stop['state'] = NORMAL
+        self.tw.start_countdown('Start recording in {} seconds', 10, 1, 5, 0, self.session_start_recording)
 
     def session_start_recording( self ):
+        self.state = Recording_State.RECORDING
         self.ctrl_strt['state'] = DISABLED
         self.ws.start_recording()
         self.ctrl_stop['state'] = NORMAL
-        self.tw.start_countdown('Recording time remaining: {} minutes', 120, 60, 60, self.session_end_recording)
+        self.tw.start_countdown('Recording time remaining: {} minutes', 120, 60, 90, 60, self.session_end_warn)
+
+    def session_end_warn(self):
+        self.tw.start_countdown('Recording time remaining: {} seconds', 60, 1, 60, 0, self.session_end_recording)
 
     def session_end_recording(self):
         self.ctrl_stop['state'] = DISABLED
         self.ws.stop_recording()
+        self.state = Recording_State.FINISHING
         self.tw.set_txt('Recording Stopped')
-        # TODO: copy to USB, save to archive, reset parms, enable start button
+        # TODO: copy to USB, 
+        # TODO: save to archive
+        self.session_reset()
 
     def session_stop(self): # early stop of recording
-        if self.debug: print('early stop of current recording')
-        self.tw.stop_countdown # tell timer window to abort countdown; it will still use the configured callback to end
+        if self.state == Recording_State.COUNTDOWN:
+            self.tw.stop_countdown(self.session_reset)
+        elif self.state == Recording_State.RECORDING:
+            self.tw.stop_countdown(self.session_end_recording)
+        self.state = Recording_State.ABORTING
+        if self.debug: print('aborting')
+
+    def session_reset(self): # reset environment for next recording
+        if self.debug: print('session_reset')
+        self.ctrl_stop['state'] = DISABLED
+        self.ctrl_strt['state'] = NORMAL
+        self.tw.set_txt(parms.timer_waiting_message)
+        self.state = Recording_State.READY
 
     def get_infoline( self ):
         return self.infoline.get()

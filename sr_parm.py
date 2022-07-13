@@ -7,6 +7,17 @@
 
 class SR_Parm():
 
+    # strings
+    timer_waiting_message = 'Riverton Story Room'
+    start_btn_txt = 'Start\nSession'
+    stop_btn_txt = 'End\nSession'
+    ttl = 'Story Room'       # control window title
+
+    # configuration stuff
+    countdown_to_start = 20 # 20 seconds
+    recording_length = 3600 # one hour of recording = 3600 seconds
+    recording_warn_at = 120 # seconds before end of recording to start warning message
+
     # control_windows
     bg_color = 'SystemButtonFace'
     bg_alpha = 0.95,
@@ -17,6 +28,17 @@ class SR_Parm():
     font_family = 'Consolas'
     font_bold = 'Consolas Bold'
     font_italic = 'Consolas Italic'
+    start_btn_height = 4
+    btn_fontsize = 24
+    ## attributes of the control window
+
+    font = 'Lucida Console'    # primary font for text
+    fontsize = 48              # font size
+    fontcolor = '#100010'
+    bgcolor = '#efffef'             # background color
+    padxy = 4                   # padding inside of frames
+    info_fontsize = 10
+    info_fontcolor = 'grey'
 
     free_disk_min = 5000.0 # minimum available space on disk before displaying warning
     fd_delay = 20000  # 60000 to update available disk space once a minute
