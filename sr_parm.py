@@ -18,8 +18,8 @@ class SR_Parm():
     recording_length = 3600 # one hour of recording = 3600 seconds
     recording_warn_at = 120 # seconds before end of recording to start warning message
 
-    # control_windows
-    bg_color = 'SystemButtonFace'
+    # control_window
+    bg_color = 'LightGreen' # 'SystemButtonFace'
     bg_alpha = 0.95,
     text_info_color = 'Black'
     text_warn_color = 'Red'
@@ -28,14 +28,16 @@ class SR_Parm():
     font_family = 'Consolas'
     font_bold = 'Consolas Bold'
     font_italic = 'Consolas Italic'
-    start_btn_height = 4
+    btn_height = 4
     btn_fontsize = 24
-    ## attributes of the control window
+    btn_idle_color = 'Grey'
+    btn_active_color = 'Red'
+    btn_bg_color = 'SystemButtonFace'
 
     font = 'Lucida Console'    # primary font for text
     fontsize = 48              # font size
     fontcolor = '#100010'
-    bgcolor = '#efffef'             # background color
+    ##bgcolor = '#efffef'             # background color
     padxy = 4                   # padding inside of frames
     info_fontsize = 10
     info_fontcolor = 'grey'
