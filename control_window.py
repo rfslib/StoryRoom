@@ -30,6 +30,7 @@
 import asyncio
 from tkinter import *
 import psutil
+from time import sleep
 
 from sr_parm import SR_Parm as parms
 from obs_xface import OBS_Xface, OBS_Error
@@ -64,7 +65,7 @@ class Control_Window(Toplevel):
         self.state = Recording_State.INIT
 
         # set our look
-        self.config(bg=parms.bgcolor)
+        self.config(bg=parms.bg_color)
         self.overrideredirect(True) # don't show title 
         self.attributes('-alpha', 1.0) # set transparency
         self.attributes('-topmost', 1) # stay on top
@@ -84,34 +85,38 @@ class Control_Window(Toplevel):
         self.resizable(False, False)
 
         # set up the window's "title" frame
-        self.ttlframe = Frame( master=self, relief = RIDGE, borderwidth=5, bg=parms.bgcolor, padx=parms.padxy, pady=parms.padxy )
+        self.ttlframe = Frame( master=self, relief = RIDGE, borderwidth=5, bg=parms.bg_color, padx=parms.padxy, pady=parms.padxy )
         self.ttlframe.grid(row=0, column=0, columnspan=3, padx=parms.padxy, pady=parms.padxy, sticky='ew')
         self.grid_columnconfigure( 0, weight=1 )
-        self.ttllbl = Label(master=self.ttlframe, text=parms.ttl, font=(parms.font_bold, parms.fontsize), bg=parms.bgcolor, fg=parms.fontcolor)
+        self.ttllbl = Label(master=self.ttlframe, text=parms.timer_waiting_message, font=(parms.font_bold, parms.fontsize), bg=parms.bg_color, fg=parms.fontcolor)
         self.ttllbl.pack(padx=parms.padxy, pady=parms.padxy)
 
         # create a frame for interactions (buttons, text entry, etc.)
-        self.btnframe = Frame(master=self, padx=parms.padxy, pady=parms.padxy)
+        self.btnframe = Frame(master=self, bg=parms.bg_color, padx=parms.padxy, pady=parms.padxy)
         self.btnframe.grid(row=2, column=0, padx=parms.padxy, pady=parms.padxy, sticky='ewn')
-        self.ctrl_strt= Button(self.btnframe, text=parms.start_btn_txt, height=parms.start_btn_height, font=(parms.font_bold, parms.btn_fontsize),
+        self.ctrl_strt= Button(self.btnframe, height=parms.btn_height, relief=GROOVE, bg=parms.btn_bg_color,
+            text=parms.start_btn_txt, font=(parms.font_bold, parms.btn_fontsize),
             command=self.session_init)
         self.ctrl_strt.grid(row=0, column=0, padx=parms.padxy, pady=parms.padxy)
-        self.ctrl_strt['state'] = DISABLED
-        self.ctrl_stop= Button(self.btnframe, text=parms.stop_btn_txt, height=parms.start_btn_height, font=(parms.font_bold, parms.btn_fontsize),
+        self.disable_start_button()
+        self.ctrl_stop= Button(self.btnframe, height=parms.btn_height, relief=GROOVE, bg=parms.btn_bg_color,
+            text=parms.stop_btn_txt, font=(parms.font_bold, parms.btn_fontsize),
             command=self.session_stop)
         self.ctrl_stop.grid(row=0, column=1, padx=parms.padxy, pady=parms.padxy)
-        self.ctrl_stop['state'] = DISABLED
+        self.disable_stop_button()
         self.update
 
         # "info" frame
         self.infoline=StringVar()
         self.diskline=StringVar()
         self.set_diskline(f'Available disk space: ????? ')
-        self.infframe = Frame(master=self, bg=parms.bgcolor, padx=parms.padxy, pady=parms.padxy)
+        self.infframe = Frame(master=self, bg=parms.bg_color, padx=parms.padxy, pady=parms.padxy)
         self.infframe.grid(row=6, column=0, padx=parms.padxy, pady=parms.padxy, sticky = 'es')
-        self.inflabel = Label(master=self.infframe, textvariable=self.infoline, fg=parms.info_fontcolor, font=(parms.font_family, parms.info_fontsize))
+        self.inflabel = Label(master=self.infframe, textvariable=self.infoline, fg=parms.info_fontcolor, bg=parms.bg_color,
+            font=(parms.font_family, parms.info_fontsize))
         self.inflabel.pack(padx=parms.padxy, pady=parms.padxy)
-        self.dsklabel = Label(master=self.infframe, textvariable=self.diskline, fg=parms.info_fontcolor, font=(parms.font_family, parms.info_fontsize))
+        self.dsklabel = Label(master=self.infframe, textvariable=self.diskline, fg=parms.info_fontcolor, bg=parms.bg_color,
+            font=(parms.font_family, parms.info_fontsize))
         self.dsklabel.pack(padx=parms.padxy, pady=parms.padxy)
         self.update()
               
@@ -136,7 +141,7 @@ class Control_Window(Toplevel):
             self.show_disk_space()
             if self.debug: print('system ready')
 
-        self.ctrl_strt['state'] = NORMAL
+        self.session_reset()
         self.update()
 
         self.state = Recording_State.READY
@@ -153,29 +158,48 @@ class Control_Window(Toplevel):
             exit(-1)
         pass # TODO: finish me
 
+    def enable_start_button(self):
+        self.ctrl_strt.config(fg=parms.btn_active_color)
+        self.ctrl_strt['state'] = NORMAL
+
+    def disable_start_button(self):
+        self.ctrl_strt['state'] = DISABLED
+        self.ctrl_strt.config(fg=parms.btn_idle_color)
+
+    def enable_stop_button(self):
+        self.ctrl_stop.config(fg=parms.btn_active_color)
+        self.ctrl_stop['state'] = NORMAL
+
+    def disable_stop_button(self):
+        self.ctrl_stop['state'] = DISABLED
+        self.ctrl_stop.config(fg=parms.btn_idle_color)
+
     def session_init(self):
         self.state = Recording_State.COUNTDOWN
+        self.disable_start_button()
         # TODO: detect USB drive and available space (NOTE: only one USB port will be physically exposed, so this will be the non-C: drive)
         # TODO: get the desired filename
-        self.ctrl_stop['state'] = NORMAL
+        self.enable_stop_button()
         self.tw.start_countdown('Start recording in {} seconds', 10, 1, 5, 0, self.session_start_recording)
 
     def session_start_recording( self ):
         self.state = Recording_State.RECORDING
-        self.ctrl_strt['state'] = DISABLED
+        self.disable_start_button()
+        self.enable_stop_button()
         self.ws.start_recording()
-        self.ctrl_stop['state'] = NORMAL
         self.tw.start_countdown('Recording time remaining: {} minutes', 120, 60, 90, 60, self.session_end_warn)
 
     def session_end_warn(self):
         self.tw.start_countdown('Recording time remaining: {} seconds', 60, 1, 60, 0, self.session_end_recording)
 
     def session_end_recording(self):
-        self.ctrl_stop['state'] = DISABLED
+        self.disable_stop_button()
         self.ws.stop_recording()
         self.state = Recording_State.FINISHING
         self.tw.set_txt('Recording Stopped')
         # TODO: copy to USB, 
+        self.tw.set_txt('Copying to USB')
+        sleep(3)
         # TODO: save to archive
         self.session_reset()
 
@@ -189,15 +213,15 @@ class Control_Window(Toplevel):
 
     def session_reset(self): # reset environment for next recording
         if self.debug: print('session_reset')
-        self.ctrl_stop['state'] = DISABLED
-        self.ctrl_strt['state'] = NORMAL
         self.tw.set_txt(parms.timer_waiting_message)
+        self.disable_stop_button()
+        self.enable_start_button()
         self.state = Recording_State.READY
 
-    def get_infoline( self ):
+    def get_infoline(self):
         return self.infoline.get()
 
-    def set_infoline( self, textin, text_color=parms.text_soft_color ):
+    def set_infoline(self, textin, text_color=parms.text_soft_color):
         self.inflabel.config(fg=text_color)
         self.infoline.set(str(textin))
     
