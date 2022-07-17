@@ -1,6 +1,7 @@
 # StoryRoom
 
 This repository contains the code for the Story Room at the Riverton FamilySearch Library.
+Note: the file simpleobsws.py needs to be manually added, since a pip install gets a newer version that uses different class names. It can be found at: 
 
 ## Purpose
 
