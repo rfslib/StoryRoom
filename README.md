@@ -11,12 +11,12 @@ The Story Room is a sound-proofed room where people can record a one-hour video.
 ## Technical Componenets
 
 * PTZ camera
-* ceiling-mounted microphones feeding into a automixer
+* ceiling-mounted microphones feeding into a automixer (Rane)
 * computer
-* Two monitor (one for the monitor, one for control)
+* Two monitors (one for the projector/monitor, one for control)
 * Windows 10 as the OS
 * OBS Studio to do the recording
-* OBS web ???
+* OBS websockets
 * Python as the controlling program
 
-Note that OBS Studio allows internal scripting with Python, but that it was substantially more complex to do the controlling and on-screen display. There is still some internal scripting to automate some things.
+Note that OBS Studio allows internal scripting with Python, but that it was substantially more complex to do the controlling and on-screen display.
