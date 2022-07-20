@@ -43,14 +43,21 @@ class OBS_Xface(obsws):
         print('OBS_Xface checking if obs is running')
         if self.obs_is_running():
             print('we think OBS is running; going to register on_obs_event')
+            self.loop.run_until_complete(self.connect())
             self.register(self.on_obs_event) # handle events
             self.loop.run_until_complete(self.get_obs_info()) # get the basic info (version, status, etc.)
         else:
             print('we didn\'t get OBS to run; returning None')
             raise OBS_Error("could not start OBS")
 
+        #self.loop.run_until_complete(self.connect())
+
+    #def __del__(self):
+    #    self.loop.run_until_complete(self.disconnect())
+    #    self.loop.close()
+
     async def get_obs_info(self):
-        await self.connect()
+        #await self.connect()
         info = await self.call( 'GetVersion' )
         if self.debug: print( f'GetVersion: {info}')
         self.obs_version = info['obs-studio-version']
@@ -60,7 +67,7 @@ class OBS_Xface(obsws):
         stats = await self.call( 'GetStats' )
         if self.debug: print( f'GetStats: {stats}')
         await asyncio.sleep( 1 )
-        await self.disconnect()
+        #await self.disconnect()
 
     def is_process_running(self, processName):
         # scan all the running processes for processName
@@ -105,21 +112,21 @@ class OBS_Xface(obsws):
             await self.callback(data)
         
     async def __start_recording( self ):
-        await self.connect()
+        #await self.connect()
         rc = await self.call( 'StartRecording' )
         print( f'start_recording rc: {rc}')
         await asyncio.sleep( 1 )
-        await self.disconnect( )
+        #await self.disconnect( )
 
     def start_recording( self ):
         self.loop.run_until_complete( self.__start_recording( ) )
 
     async def __stop_recording( self ):
-        await self.connect()
+        #await self.connect()
         rc = await self.call( 'StopRecording' )
         print( f'stop_recording rc: {rc}')
         await asyncio.sleep( 1 )
-        await self.disconnect( )
+        #await self.disconnect( )
 
     def stop_recording( self ):
         self.loop.run_until_complete( self.__stop_recording( ) )

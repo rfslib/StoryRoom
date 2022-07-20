@@ -122,12 +122,6 @@ class Control_Window(Toplevel):
               
         if self.debug: print('control window ready')
 
-        # set up the timer window
-        self.tw = timer_window.Timer_Window(master)
-        self.tw.set_txt(parms.timer_waiting_message)
-        
-        if self.debug: print('timer window ready')
-
         # get OBS going
         self.set_infoline('Starting OBS')
         self.update()
@@ -140,6 +134,12 @@ class Control_Window(Toplevel):
             self.set_infoline(f'sr: {self.sr_version}, obs: {self.ws.obs_version}, ws: {self.ws.ws_version}')
             self.show_disk_space()
             if self.debug: print('system ready')
+
+        # set up the timer window
+        self.tw = timer_window.Timer_Window(master)
+        self.tw.set_txt(parms.timer_waiting_message)
+        
+        if self.debug: print('timer window ready')
 
         self.session_reset()
         self.update()
