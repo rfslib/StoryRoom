@@ -1,5 +1,5 @@
 """
-    file: control_window.py
+    file: old_control_window.py
     author: ed c
 """
 
@@ -48,7 +48,7 @@ class Recording_State:
     CLEANUP = 5
     ABORTING = -1
 
-class Control_Window(Toplevel):
+class old_Control_Window(Toplevel):
 
     debug = 1
 
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     root = Tk()
     root.geometry( '300x100+0+48' )
     root.title( 'close me to exit test' )
-    tst = Control_Window( root )
+    tst = old_Control_Window( root )
     #tst.start_recording( )
     #time.sleep( 3 )
     #tst.stop_recording( )

@@ -10,7 +10,7 @@ purpose: start Tk and set up windows for control of the Story Room recording sys
 debug = 1
 
 import tkinter as tk
-from control_window import Control_Window
+from old_control_window import old_Control_Window
 
 sr_version = 0.2
 
@@ -23,7 +23,7 @@ tx.grid(row=1, column=1, padx=4, pady=4)
 tx.insert(tk.END, 'Story Room System starting....\n')
 tx.update()
 
-control_win = Control_Window(wm)
+control_win = old_Control_Window(wm)
 
 tx.insert(tk.END, 'Initialization complete\n')
 tx.update()
