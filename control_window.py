@@ -143,15 +143,16 @@ def test_start_callback():
 def test_stop_callback():
     pass
 
+def test_exit_callback(e):
+    tst.destroy()
+    root.destroy()
+
 if __name__ == '__main__':
     from sr_parm import SR_Parm as parms
     root = Tk()
     root.geometry( '300x100+0+0' )
     root.title( 'close me to exit test' )
-    tst = Control_Window(root, parms, test_start_callback, test_stop_callback )
+    tst = Control_Window(root, parms, test_start_callback, test_stop_callback, test_exit_callback, debug=True )
     tst.set_infoline(parms.info_line.format('?','?','?'), parms.text_soft_color)
-    tst.set_diskline(parms.disk_line.format('?'), parms.text_soft_color)
-    #tst.start_recording( )
-    #time.sleep( 3 )
-    #tst.stop_recording( )
+    tst.set_diskline(parms.disk_line.format(0), parms.text_soft_color)
     root.mainloop()
