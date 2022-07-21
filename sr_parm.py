@@ -12,6 +12,8 @@ class SR_Parm():
     start_btn_txt = 'Start\nSession'
     stop_btn_txt = 'End\nSession'
     ttl = 'Story Room'       # control window title
+    info_line = 'sr: {}, obs: {}, ws: {}'
+    disk_line = 'Available disk space: {:.2f}G '
 
     # configuration stuff
     countdown_to_start = 20 # 20 seconds

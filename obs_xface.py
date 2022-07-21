@@ -29,7 +29,9 @@ class OBS_Xface(obsws):
         callback = None, 
         local :bool = True):
         super().__init__(host, port, password)
+
         self._debug = True
+        
         # Set up our public variables
         self.host = host                # host address
         self.port = port                # port number (default for OBS websockets is 4444)
@@ -48,41 +50,56 @@ class OBS_Xface(obsws):
         self.callback = callback        # callback function to handle websocket events
 
         # start OBS if it isn't already running
-        print('OBS_Xface checking if obs is running')
+        if self._debug: print('\n>>> obs_xface: OBS_Xface checking if obs is running')
         if self.obs_is_running():
-            print('we think OBS is running; going to register on_obs_event')
+            if self._debug: print('\n>>> obs_xface: we think OBS is running; going to register on_obs_event')
             self.loop.run_until_complete(self.connect())
-            self.register(self.on_obs_event) # handle events
-            self.loop.run_until_complete(self.get_obs_info()) # get the basic info (version, status, etc.)
-            self.update_status()
+            self.event_handle = self.register(self.on_obs_event) # handle events
+            self.get_obs_info() # get the basic info (version, status, etc.)
+            self.get_obs_stats()
         else:
-            print('we didn\'t get OBS to run; returning None')
+            if self._debug: print('\n>>> obs_xface: we didn\'t get OBS to run; returning None')
             raise OBS_Error("could not start OBS")
 
-    #def __del__(self):
-    #    self.loop.run_until_complete(self.disconnect())
-    #    self.loop.close()
+    def __del__(self):
+        if self._debug: print('\n>>> disconnect websockets')
+        self.loop.run_until_complete(self.__shutdown())
+        if self._debug: print("\n>>> unregister on_obs_event")
+        self.loop.run_until_complete(self.unregister(self.on_obs_event))
+        if self._debug: print('\n>>> close loop')
+        self.loop.close()
+        if self._debug: print('\n>>> stop loop')
+        self.loop.stop()
+        if self._debug: print("\n>>> waiting 10 seconds")
+        sleep(10)
 
-    async def get_obs_info(self):
+    async def __shutdown(self):
+        await self.disconnect()
+        asyncio.sleep(1)
+
+    async def __get_obs_info(self):
         #await self.connect()
         info = await self.call( 'GetVersion' )
-        if self._debug: print( f'GetVersion: {info}')
+        if self._debug: print( f'\n>>> obs_xface GetVersion: {info}')
         self.obs_version = info['obs-studio-version']
         self.ws_version = info['obs-websocket-version']
         self.obs_status = info['status']
         await asyncio.sleep( 1 )
         #await self.disconnect()
 
-    async def get_obs_stats(self):
+    def get_obs_info(self):
+        self.loop.run_until_complete(self.__get_obs_info())
+
+    async def __get_obs_stats(self):
         info = await self.call('GetStats')
-        if self._debug: print(f'GetStats: {info}')
+        if self._debug: print(f'\n>>> obs_xface GetStats: {info}')
         self.obs_status = info['status']
         self.disk_space = info['stats']['free-disk-space']
-        if self._debug: print(f'disk_space: {self.disk_space}')
+        if self._debug: print(f'\n>>> obs_xface disk_space: {self.disk_space}')
         #await asyncio.sleep(1)
 
-    def update_status(self):
-        self.loop.run_until_complete(self.get_obs_stats())
+    def get_obs_stats(self):
+        self.loop.run_until_complete(self.__get_obs_stats())
 
     def is_process_running(self, processName):
         # scan all the running processes for processName
@@ -105,9 +122,9 @@ class OBS_Xface(obsws):
             return True
         else:
             try:
-                if self._debug: print('OK, let\'s get OBS running...')
+                if self._debug: print('\n>>> obs_xface: OK, let\'s get OBS running...')
                 foo = subprocess.Popen(parms.obs_command, cwd=parms.obs_directory)
-                if self._debug: print(f'foo: {foo}')
+                if self._debug: print(f'\n>>> obs_xface: foo: {foo}')
             except:
                 return False
             # wait for OBS to start (TODO: there's probably a better way to do this...)
@@ -115,25 +132,31 @@ class OBS_Xface(obsws):
             wait_attempts = 0
             while wait_attempts < parms.obs_start_wait_tries and obs_ready == False:
                 sleep(parms.obs_start_wait_delay)
-                if self._debug: print(f'running: {self.is_process_running(parms.obs_processname)}')
+                if self._debug: print(f'\n>>> obs_xface: running: {self.is_process_running(parms.obs_processname)}')
                 if self.is_process_running(parms.obs_processname):
                     obs_ready = True
             sleep(2) # let OBS settle before hammering it with requests
             return obs_ready
 
     async def on_obs_event(self, data):
-        if self._debug: print( f'OBS Event: \'{data["update-type"]}\', Raw data: {data}')
+        if self._debug: print( f'\n>>> obs_xface obs event: \'{data["update-type"]}\', Raw data: {data}')
         self.last_event_type = data['update-type']
         self.last_event = data
         if 'recordingFilename' in data:
             self.file_name = data['recordingFilename']
+        else:
+            self.file_name = ''
+            if self._debug: print(f'\n>>> obs_xface.on_obs_event, no recordingFilename')
         if self.callback != None:
-            await self.callback(data)
+            try:
+                self.callback(data)
+            except:
+                print(f'\n>>> obs_xface: obs_xface.on_obs_event exception with {self.callback}')
         
     async def __start_recording( self ):
         #await self.connect()
         rc = await self.call( 'StartRecording' )
-        if self._debug: print( f'start_recording rc: {rc}')
+        if self._debug: print( f'\n>>> obs_xface: start_recording rc: {rc}')
         await asyncio.sleep( 1 )
         #await self.disconnect( )
 
@@ -143,7 +166,7 @@ class OBS_Xface(obsws):
     async def __stop_recording( self ):
         #await self.connect()
         rc = await self.call( 'StopRecording' )
-        if self._debug: print( f'stop_recording rc: {rc}')
+        if self._debug: print( f'\n>>> obs_xface: stop_recording rc: {rc}')
         await asyncio.sleep( 1 )
         #await self.disconnect( )
 
