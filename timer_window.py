@@ -1,20 +1,16 @@
 """
 file: timer_window.py
 author: rfslib
-
-references:
-    https://delfstack.com/howto/python-tkinter/how-to-change-the-tkinter-label-text
-
 """
+
 from tkinter import *
-from sr_parm import SR_Parm as parms
 
 class Timer_Window(Toplevel):
     debug = 0
     logit = 0
     foo = 0
 
-    ## countdown stuff
+    ## countdown stuff, set in start_countdown()
     tw_countdown_seconds = 10
     tw_countdown_active = False
     tw_countdown_complete = False
@@ -24,26 +20,28 @@ class Timer_Window(Toplevel):
     tw_countdown_string = '{} seconds remaining'
     tw_countdown_abort = False
    
-    def __init__(self, master):
+    def __init__(self, master, parms):
         Toplevel.__init__(self,master)
 
+        self.prm = parms
+        
         # set our look
-        self.config( bg=parms.tw_normbg)
-        self.attributes( '-alpha', parms.tw_normalpha ) # set transparency
+        self.config( bg=self.prm.tw_normbg)
+        self.attributes( '-alpha', self.prm.tw_normalpha ) # set transparency
         self.overrideredirect( True ) # hide the title bar  
         self.attributes('-topmost', 1) # stay on top     
     
         # set our size and location
         self.xoffset = self.winfo_screenwidth( )
-        self.geometry( f'{parms.tw_mwidth}x{parms.tw_mheight}+{self.xoffset}+{parms.tw_yoffset}')
+        self.geometry( f'{self.prm.tw_mwidth}x{self.prm.tw_mheight}+{self.xoffset}+{self.prm.tw_yoffset}')
 
         self._txt = StringVar()
         self._txt.set( 'waiting for start' )
-        self.lab = Label( master=self, textvariable=self._txt, font=( parms.tw_font, parms.tw_fontsize), 
-            fg=parms.tw_fontwarn, bg=parms.tw_warnbg
+        self.lab = Label( master=self, textvariable=self._txt, font=( self.prm.tw_font, self.prm.tw_fontsize), 
+            fg=self.prm.tw_fontwarn, bg=self.prm.tw_warnbg
             )
-        self.lab.pack( padx=parms.tw_padxy * 2, pady=parms.tw_padxy, side='left')
-        self.lab.config( bg=parms.tw_normbg )
+        self.lab.pack( padx=self.prm.tw_padxy * 2, pady=self.prm.tw_padxy, side='left')
+        self.lab.config( bg=self.prm.tw_normbg )
 
         if self.debug: self.upd( )
         if self.logit: print( 'timer window ready' )
@@ -72,8 +70,8 @@ class Timer_Window(Toplevel):
         self.tw_countdown_return = return_at
         self.tw_countdown_complete = False
         self.tw_countdown_abort = False
-        self.attributes( '-alpha', parms.tw_normalpha )
-        self.config( bg=parms.tw_normbg )
+        self.attributes( '-alpha', self.prm.tw_normalpha )
+        self.config( bg=self.prm.tw_normbg )
         self.countdown()  # start the countdown
 
     def stop_countdown(self, new_callback): # tell the current countdown to stop early
@@ -84,17 +82,17 @@ class Timer_Window(Toplevel):
         if self.tw_countdown_abort: # early stop flag set
             self.set_txt('Stopped')
             if self.logit: print( 'countdown aborted')
-            self.attributes( '-alpha', parms.tw_normalpha )
-            self.config( bg=parms.tw_normbg )
-            self.lab.config( bg=parms.tw_normbg )
+            self.attributes( '-alpha', self.prm.tw_normalpha )
+            self.config( bg=self.prm.tw_normbg )
+            self.lab.config( bg=self.prm.tw_normbg )
             self.tw_countdown_complete = True
             self.tw_countdown_active = False # clear in-countdown flag
             self.countdown_callback()
         elif self.tw_countdown_seconds > self.tw_countdown_return: # still time left
             if self.tw_countdown_seconds <= self.tw_countdown_warn:
-                self.attributes( '-alpha', parms.tw_warnalpha )
-                self.config( bg=parms.tw_warnbg )
-                self.lab.config( bg=parms.tw_warnbg )
+                self.attributes( '-alpha', self.prm.tw_warnalpha )
+                self.config( bg=self.prm.tw_warnbg )
+                self.lab.config( bg=self.prm.tw_warnbg )
             if not ( self.tw_countdown_seconds % self.tw_countdown_interval ): # update at every 'interval'
                 self.set_txt( self.tw_countdown_string.format( int( self.tw_countdown_seconds / self.tw_countdown_interval ) ) )
                 if self.logit: print( f'countdown at {self.tw_countdown_seconds} seconds')
@@ -103,15 +101,12 @@ class Timer_Window(Toplevel):
         else: # time is up
             self.set_txt( '' )
             if self.logit: print( 'countdown complete')
-            self.attributes( '-alpha', parms.tw_normalpha )
-            self.config( bg=parms.tw_normbg )
-            self.lab.config( bg=parms.tw_normbg )
+            self.attributes( '-alpha', self.prm.tw_normalpha )
+            self.config( bg=self.prm.tw_normbg )
+            self.lab.config( bg=self.prm.tw_normbg )
             self.tw_countdown_complete = True
             self.tw_countdown_active = False # clear in-countdown flag
             self.countdown_callback()
-
-    # TODO: def stop_countdown( self ) # normal stop, or early stop
-
 
 if __name__ == '__main__':
     root = Tk()

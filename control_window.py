@@ -3,40 +3,7 @@ file: control_window.py
 author: rfslib
 '''
 
-# TODO: detect USB drive and available space (NOTE: only one USB port will be physically exposed, so this will be the non-C: drive)
-# TODO: get the desired filename
-# TODO: check that OBS is running and start it before starting countdown to recording start
-# TODO: periodically check OBS status (every nn seconds)
-# TODO: check event against expected action and status
-# TODO: OBS portable mode (config settings are saved in the OBS main folder) see obsproject.com/forum/resources/obs-and-obs-studio-portable-mode-on-windows.359
-# TODO: OBS Event: 'SourceDestroyed', Raw data: {'sourceKind': 'scene', 'sourceName': 'Scene', 'sourceType': 'scene', 'update-type': 'SourceDestroyed'}: close app
-# TODO: capture OS events (i.e., close app, etc.)
-# TODO: detect USB drive, copy file at end of recording, unmount USB drive
-# TODO: catch OBS events (? under what conditions? connect() has to be active)
-# TODO: installer (installation instructions)
-# TODO: (OBS) create sources, lock configuration files
-# TODO: check, set Sources, Profile, Scene (create standards for these)
-# TODO: set filename format (SetFilenameFormatting)
-# TODO: QSG (have this app set all parameters so no manual settings are required)
-# TODO: warn on version mismatch for OBS, websockets and simpleobsws
-# TODO: USB disconnect
-# DONE: disable buttons when not valid
-# DONE: finish logic to abort recording (countdown to start vs middle of recording)
-# DONE: button/function to stop recording early
-# DONE: change to seconds remaining on final 2 minutes of recording
-# DONE: warn on low disk space (use psutil.disk_usage(".").free/1024/1024/1024)
-# DONE: start OBS here or a separate class instead of startup so it can be checked/started from here
-
-import asyncio
 from tkinter import *
-from tracemalloc import start
-import psutil
-from time import sleep
-
-
-##from obs_xface import OBS_Xface, OBS_Error
-
-##import timer_window
 
 free_disk = 0
 
