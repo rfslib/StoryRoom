@@ -32,7 +32,7 @@ from tkinter import *
 import psutil
 from time import sleep
 
-from sr_parm import SR_Parm as parms
+from sr_parm import SR_Parm as cfg
 from obs_xface import OBS_Xface, OBS_Error
 
 import timer_window
@@ -65,7 +65,7 @@ class old_Control_Window(Toplevel):
         self.state = Recording_State.INIT
 
         # set our look
-        self.config(bg=parms.bg_color)
+        self.config(bg=cfg.bg_color)
         self.overrideredirect(True) # don't show title 
         self.attributes('-alpha', 1.0) # set transparency
         self.attributes('-topmost', 1) # stay on top
@@ -85,24 +85,24 @@ class old_Control_Window(Toplevel):
         self.resizable(False, False)
 
         # set up the window's "title" frame
-        self.ttlframe = Frame( master=self, relief = RIDGE, borderwidth=5, bg=parms.bg_color, padx=parms.padxy, pady=parms.padxy )
-        self.ttlframe.grid(row=0, column=0, columnspan=3, padx=parms.padxy, pady=parms.padxy, sticky='ew')
+        self.ttlframe = Frame( master=self, relief = RIDGE, borderwidth=5, bg=cfg.bg_color, padx=cfg.padxy, pady=cfg.padxy )
+        self.ttlframe.grid(row=0, column=0, columnspan=3, padx=cfg.padxy, pady=cfg.padxy, sticky='ew')
         self.grid_columnconfigure( 0, weight=1 )
-        self.ttllbl = Label(master=self.ttlframe, text=parms.timer_waiting_message, font=(parms.font_bold, parms.fontsize), bg=parms.bg_color, fg=parms.fontcolor)
-        self.ttllbl.pack(padx=parms.padxy, pady=parms.padxy)
+        self.ttllbl = Label(master=self.ttlframe, text=cfg.timer_waiting_message, font=(cfg.font_bold, cfg.fontsize), bg=cfg.bg_color, fg=cfg.fontcolor)
+        self.ttllbl.pack(padx=cfg.padxy, pady=cfg.padxy)
 
         # create a frame for interactions (buttons, text entry, etc.)
-        self.btnframe = Frame(master=self, bg=parms.bg_color, padx=parms.padxy, pady=parms.padxy)
-        self.btnframe.grid(row=2, column=0, padx=parms.padxy, pady=parms.padxy, sticky='ewn')
-        self.ctrl_strt= Button(self.btnframe, height=parms.btn_height, relief=GROOVE, bg=parms.btn_bg_color,
-            text=parms.start_btn_txt, font=(parms.font_bold, parms.btn_fontsize),
+        self.btnframe = Frame(master=self, bg=cfg.bg_color, padx=cfg.padxy, pady=cfg.padxy)
+        self.btnframe.grid(row=2, column=0, padx=cfg.padxy, pady=cfg.padxy, sticky='ewn')
+        self.ctrl_strt= Button(self.btnframe, height=cfg.btn_height, relief=GROOVE, bg=cfg.btn_bg_color,
+            text=cfg.start_btn_txt, font=(cfg.font_bold, cfg.btn_fontsize),
             command=self.session_init)
-        self.ctrl_strt.grid(row=0, column=0, padx=parms.padxy, pady=parms.padxy)
+        self.ctrl_strt.grid(row=0, column=0, padx=cfg.padxy, pady=cfg.padxy)
         self.disable_start_button()
-        self.ctrl_stop= Button(self.btnframe, height=parms.btn_height, relief=GROOVE, bg=parms.btn_bg_color,
-            text=parms.stop_btn_txt, font=(parms.font_bold, parms.btn_fontsize),
+        self.ctrl_stop= Button(self.btnframe, height=cfg.btn_height, relief=GROOVE, bg=cfg.btn_bg_color,
+            text=cfg.stop_btn_txt, font=(cfg.font_bold, cfg.btn_fontsize),
             command=self.session_stop)
-        self.ctrl_stop.grid(row=0, column=1, padx=parms.padxy, pady=parms.padxy)
+        self.ctrl_stop.grid(row=0, column=1, padx=cfg.padxy, pady=cfg.padxy)
         self.disable_stop_button()
         self.update
 
@@ -110,14 +110,14 @@ class old_Control_Window(Toplevel):
         self.infoline=StringVar()
         self.diskline=StringVar()
         self.set_diskline(f'Available disk space: ????? ')
-        self.infframe = Frame(master=self, bg=parms.bg_color, padx=parms.padxy, pady=parms.padxy)
-        self.infframe.grid(row=6, column=0, padx=parms.padxy, pady=parms.padxy, sticky = 'es')
-        self.inflabel = Label(master=self.infframe, textvariable=self.infoline, fg=parms.info_fontcolor, bg=parms.bg_color,
-            font=(parms.font_family, parms.info_fontsize))
-        self.inflabel.pack(padx=parms.padxy, pady=parms.padxy)
-        self.dsklabel = Label(master=self.infframe, textvariable=self.diskline, fg=parms.info_fontcolor, bg=parms.bg_color,
-            font=(parms.font_family, parms.info_fontsize))
-        self.dsklabel.pack(padx=parms.padxy, pady=parms.padxy)
+        self.infframe = Frame(master=self, bg=cfg.bg_color, padx=cfg.padxy, pady=cfg.padxy)
+        self.infframe.grid(row=6, column=0, padx=cfg.padxy, pady=cfg.padxy, sticky = 'es')
+        self.inflabel = Label(master=self.infframe, textvariable=self.infoline, fg=cfg.info_fontcolor, bg=cfg.bg_color,
+            font=(cfg.font_family, cfg.info_fontsize))
+        self.inflabel.pack(padx=cfg.padxy, pady=cfg.padxy)
+        self.dsklabel = Label(master=self.infframe, textvariable=self.diskline, fg=cfg.info_fontcolor, bg=cfg.bg_color,
+            font=(cfg.font_family, cfg.info_fontsize))
+        self.dsklabel.pack(padx=cfg.padxy, pady=cfg.padxy)
         self.update()
               
         if self.debug: print('control window ready')
@@ -126,10 +126,10 @@ class old_Control_Window(Toplevel):
         self.set_infoline('Starting OBS')
         self.update()
         try:
-            self.ws = OBS_Xface(host=parms.obs_host, port=parms.obs_port, password=parms.obs_pswd, callback=self.on_obs_event)
+            self.ws = OBS_Xface(host=cfg.obs1_host, port=cfg.obs1_port, password=cfg.obs1_pswd, callback=self.on_obs_event)
         except (OBS_Error) as err:
             print(f'When starting OBS: "{err}"')
-            self.set_infoline('OBS Startup Failed. Restart the System.', text_color=parms.text_warn_color)
+            self.set_infoline('OBS Startup Failed. Restart the System.', text_color=cfg.text_warn_color)
         else:
             self.set_infoline(f'sr: {self.sr_version}, obs: {self.ws.obs_version}, ws: {self.ws.ws_version}')
             self.show_disk_space()
@@ -137,7 +137,7 @@ class old_Control_Window(Toplevel):
 
         # set up the timer window
         self.tw = timer_window.Timer_Window(master)
-        self.tw.set_txt(parms.timer_waiting_message)
+        self.tw.set_txt(cfg.timer_waiting_message)
         
         if self.debug: print('timer window ready')
 
@@ -159,20 +159,20 @@ class old_Control_Window(Toplevel):
         pass # TODO: finish me
 
     def enable_start_button(self):
-        self.ctrl_strt.config(fg=parms.btn_active_color)
+        self.ctrl_strt.config(fg=cfg.btn_active_color)
         self.ctrl_strt['state'] = NORMAL
 
     def disable_start_button(self):
         self.ctrl_strt['state'] = DISABLED
-        self.ctrl_strt.config(fg=parms.btn_idle_color)
+        self.ctrl_strt.config(fg=cfg.btn_idle_color)
 
     def enable_stop_button(self):
-        self.ctrl_stop.config(fg=parms.btn_active_color)
+        self.ctrl_stop.config(fg=cfg.btn_active_color)
         self.ctrl_stop['state'] = NORMAL
 
     def disable_stop_button(self):
         self.ctrl_stop['state'] = DISABLED
-        self.ctrl_stop.config(fg=parms.btn_idle_color)
+        self.ctrl_stop.config(fg=cfg.btn_idle_color)
 
     def session_init(self):
         self.state = Recording_State.COUNTDOWN
@@ -213,7 +213,7 @@ class old_Control_Window(Toplevel):
 
     def session_reset(self): # reset environment for next recording
         if self.debug: print('session_reset')
-        self.tw.set_txt(parms.timer_waiting_message)
+        self.tw.set_txt(cfg.timer_waiting_message)
         self.disable_stop_button()
         self.enable_start_button()
         self.state = Recording_State.READY
@@ -221,7 +221,7 @@ class old_Control_Window(Toplevel):
     def get_infoline(self):
         return self.infoline.get()
 
-    def set_infoline(self, textin, text_color=parms.text_soft_color):
+    def set_infoline(self, textin, text_color=cfg.text_soft_color):
         self.inflabel.config(fg=text_color)
         self.infoline.set(str(textin))
     
@@ -233,13 +233,13 @@ class old_Control_Window(Toplevel):
 
     def show_disk_space(self):
         self.free_disk = psutil.disk_usage('.').free / 1024 / 1024
-        print(f'free: {self.free_disk}, min:{parms.free_disk_min}')
-        if self.free_disk < parms.free_disk_min:
-            self.dsklabel.config( bg = parms.text_warn_color )
+        print(f'free: {self.free_disk}, min:{cfg.free_disk_min}')
+        if self.free_disk < cfg.free_disk_min:
+            self.dsklabel.config( bg = cfg.text_warn_color )
         else:
-            self.dsklabel.config( bg = parms.bg_color )
+            self.dsklabel.config( bg = cfg.bg_color )
         self.set_diskline( f'Available disk space: {self.free_disk/1024:.1f}G ' )
-        self.after( parms.fd_delay, self.show_disk_space )    
+        self.after( cfg.fd_delay, self.show_disk_space )    
 
 if __name__ == '__main__':
     root = Tk()

@@ -5,7 +5,7 @@
     purpose: a simplified interface to manage obs startup and status for story_room
 """
 
-from sr_parm import SR_Parm as parms
+from sr_parm import SR_Parm as cfg
 
 import asyncio
 from simpleobsws import obsws
@@ -118,22 +118,22 @@ class OBS_Xface(obsws):
             False if failure to start
         '''
         # be sure OBS is running
-        if self.is_process_running(parms.obs_processname):
+        if self.is_process_running(cfg.obs_processname):
             return True
         else:
             try:
                 if self._debug: print('\n>>> obs_xface: OK, let\'s get OBS running...')
-                foo = subprocess.Popen(parms.obs_command, cwd=parms.obs_directory)
+                foo = subprocess.Popen(cfg.obs_command, cwd=cfg.obs_directory)
                 if self._debug: print(f'\n>>> obs_xface: foo: {foo}')
             except:
                 return False
             # wait for OBS to start (TODO: there's probably a better way to do this...)
             obs_ready = False
             wait_attempts = 0
-            while wait_attempts < parms.obs_start_wait_tries and obs_ready == False:
-                sleep(parms.obs_start_wait_delay)
-                if self._debug: print(f'\n>>> obs_xface: running: {self.is_process_running(parms.obs_processname)}')
-                if self.is_process_running(parms.obs_processname):
+            while wait_attempts < cfg.obs_start_wait_tries and obs_ready == False:
+                sleep(cfg.obs_start_wait_delay)
+                if self._debug: print(f'\n>>> obs_xface: running: {self.is_process_running(cfg.obs_processname)}')
+                if self.is_process_running(cfg.obs_processname):
                     obs_ready = True
             sleep(2) # let OBS settle before hammering it with requests
             return obs_ready

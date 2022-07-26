@@ -9,11 +9,10 @@ class SR_Parm():
 
     # strings
     timer_waiting_message = 'Riverton Story Room'
-    start_btn_txt = 'Start\nSession'
-    stop_btn_txt = 'End\nSession'
+    start_btn_txt = 'Start\nRecording'
+    stop_btn_txt = 'Stop\nRecording'
     ttl = 'Story Room'       # control window title
-    info_line = 'sr: {}, obs: {}, ws: {}'
-    disk_line = 'Available disk space: {:.2f}G '
+    info_line = '{} System Status: {}, Available disk space: {:.1f}G'
 
     # configuration stuff
     countdown_to_start = 20 # 20 seconds
@@ -22,7 +21,7 @@ class SR_Parm():
 
     # control_window
     bg_color = 'LightGreen' # 'SystemButtonFace'
-    bg_alpha = 0.95,
+    bg_alpha = 0.95
     text_info_color = 'Black'
     text_warn_color = 'Red'
     text_done_color = 'DarkGreen'
@@ -39,10 +38,11 @@ class SR_Parm():
     font = 'Lucida Console'    # primary font for text
     fontsize = 48              # font size
     fontcolor = '#100010'
-    ##bgcolor = '#efffef'             # background color
     padxy = 4                   # padding inside of frames
     info_fontsize = 10
     info_fontcolor = 'grey'
+    state_font_size = 14
+    state_font_color = 'DarkBlue'
 
     free_disk_min = 5000.0 # minimum available space on disk before displaying warning
     fd_delay = 20000  # 60000 to update available disk space once a minute
@@ -57,9 +57,12 @@ class SR_Parm():
     obs_output_destination = r'C:\Users'
 
     # OBS interface
-    obs_pswd = 'family'
-    obs_host = '127.0.0.1'
-    obs_port = 4444
+    obs1_host = '127.0.0.1'
+    obs1_port = 4444
+    obs1_pswd = 'family'
+    obs2_host = '' #give a host name/ip address to activate second system
+    obs2_port = 4444
+    obs2_pswd = 'family'
 
     # timer_window
 
