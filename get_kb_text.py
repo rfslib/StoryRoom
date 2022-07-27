@@ -5,6 +5,7 @@ author: rfslib
 purpose: allow and get entry of a filename
 
 adapted from https://masterprograming.com/how-to-create-virtual-onscreen-keyboard-using-python-and-tkinter/
+note that the above site disappeared the day after (on 20220727)
 '''
 
 from tkinter import *
@@ -14,7 +15,10 @@ class get_kb_text(Toplevel):
 
     def __init__(self, master): # Create the keyboard window, then hide (withdraw) it
         Toplevel.__init__(self, master)
+
+        self.withdraw() # hide already
         
+        self.text = StringVar()
         self.text_prompt = StringVar()
         self.text_entry = StringVar()
 
@@ -26,32 +30,26 @@ class get_kb_text(Toplevel):
         self.ypad = 10
         self.xwidth = (12 * (self.key_width * self.font_size) ) + (13 * self.xpad)
         
-        #self.title('Enter a filename for the video:')  # title Name
-        # self.iconbitmap('add icon link And Directory name')    # icon add
-        # function coding start 
         self.overrideredirect(True) # don't show title 
-        self.attributes('-alpha', 1.0) # set transparency
+        #self.attributes('-alpha', 0.9) # set transparency
         self.attributes('-topmost', 1) # stay on top
-
-        # Size window size
         self.geometry('{}x300+100+500'.format(int(self.xwidth)))
         self.resizable(False, False)
+        self.config(bg = 'green')    #  add background color
 
-        self.configure(bg = 'green')    #  add background color
-
-        # text entry display
-        
-        self.text_prompt.set('Enter using the keyboard: ')
+        # display prompt
+        self.text_prompt.set('Use the on-screen keyboard: ')
         self.text_label = ttk.Label(self, textvariable=self.text_prompt, anchor='e')
         self.text_label.grid(row=0, column=0, rowspan=1, columnspan=3, ipadx=(self.key_width*3)+(self.xpad*2), ipady=self.ypad)
         
+        # text entry area
         self.text_entry.set('')
         text_entry = ttk.Entry(self, state='readonly', textvariable = self.text_entry)
         text_entry.grid(row=0, column=3, rowspan=1, columnspan=10, ipadx=(self.key_width*8)+(self.xpad*7) , ipady=self.ypad, sticky='w')
 
         # add buttons for the number line
-        self.r1_frame = ttk.Frame(master=self)
-        self.r1_frame.grid(row=1, column=0, columnspan=20)
+        #self.r1_frame = ttk.Frame(master=self)
+        #self.r1_frame.grid(row=1, column=0, columnspan=20)
         ttk.Button(self, text='1', width=6, command=lambda : self.key_press('1')).grid(row=1, column=0, ipadx=self.xpad, ipady=self.ypad)
         ttk.Button(self, text='2', width=6, command=lambda : self.key_press('2')).grid(row=1, column=1, ipadx=self.xpad, ipady=self.ypad)
         ttk.Button(self, text='3', width=6, command=lambda : self.key_press('3')).grid(row=1, column=2, ipadx=self.xpad, ipady=self.ypad)
@@ -107,10 +105,7 @@ class get_kb_text(Toplevel):
         space = ttk.Button(self, text='Space' , width=(self.key_width*9)+(self.xpad*8), command=lambda : self.key_press(' '))
         space.grid(row=5, column=0, columnspan=9, ipadx=self.xpad, ipady=self.ypad)
 
-        #self.withdraw()
         self.update()
-        self.focus()
-        self.mainloop()  # using ending point
 
     def key_press(self, num):
         self.text_entry.set(self.text_entry.get() + str(num))
@@ -122,16 +117,37 @@ class get_kb_text(Toplevel):
     # Enter Button Work Next line Function
     def process_enter(self):
         print(f'>>> Enter tapped. Value: {self.text_entry.get()}')
-        text_entered = self.text_entry.get()
-        self.destroy()
-        return text_entered
+        self.text.set(self.text_entry.get())
+        self.withdraw()
+        return self.text
+
+    def get_text(self, prompt):
+        print(f'>>> get_text called, prompt: {prompt}')
+        self.text_prompt.set(prompt)
+        self.text_entry.set('')
+        self.deiconify()
+        self.focus_force()
+        self.wait_variable(self.text)
+        return self.text.get()
+
+
+def test_get_text(data):
+    print(f'>>> test_get_text called with {data}')
+    ret = gf.get_text('Enter something: ')
+    print(f'>>> test_get_text: ret: {ret}')
+    ret = gf.get_text('Enter something else: ')
+    print(f'>>> test_get_text: ret: {ret}')
+    root.unbind('<Escape>')
+    root.destroy()
 
 if __name__ == '__main__':
-    
+    from time import sleep
     root = Tk()
+    root.bind('<Escape>', test_get_text)
     #root.withdraw()
     gf = get_kb_text(root)
     print(f'>>> Get_Filename object: {gf}')
-    #root.mainloop()
+    root.focus_force()
+    root.mainloop()
 
 

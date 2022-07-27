@@ -78,7 +78,7 @@ class Story_Room():
         self.wm = tk.Tk()
         self.cw = Control_Window(self.wm, self.session_init, self.session_stop, self.debug_exit, debug=self._debug)
         self.tw = Timer_Window(self.wm)
-        #self.kb = get_kb_text(self.wm)
+        self.kb = get_kb_text(self.wm)
         self.update_state()
         
         self.obs1 = OBS_Xface(host=cfg.obs1_host, port=cfg.obs1_port, password=cfg.obs1_pswd, callback=self.on_obs1_event)
@@ -105,7 +105,8 @@ class Story_Room():
     def session_get_filename(self):
         # TODO: get filename and get things ready to record
         self.state = Recording_State.GET_FILENAME
-        self.output_file_name = 'foo.mkv'
+        self.output_file_name = self.kb.get_text('Enter filename: ')
+        ### NOTE: if output_file_name is left an empty string, it will use basename in session_end_recording() 
         print(f'>>> get_filename: {self.output_file_name}')
         self.state = Recording_State.WAIT_FOR_START
         self.cw.enable_start_button()
@@ -131,6 +132,10 @@ class Story_Room():
         self.obs1.stop_recording()
         self.tw.set_txt('Recording Stopped')
         self.state = Recording_State.COPYING
+        if self.output_file_name == '':
+            self.output_file_name = basename(self.obs1.file_name)
+        else:
+            self.output_file_name += '.mkv'
         dest_file = '{}:\\{}'.format(self.usb_drive, self.output_file_name)
         if self._debug: print(f'>>> copying {self.obs1.file_name} to {dest_file}')
         # TODO: copy to USB, 
