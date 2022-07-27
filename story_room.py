@@ -63,6 +63,7 @@ from sr_parm import SR_Parm as cfg
 from control_window import Control_Window
 from timer_window import Timer_Window
 from obs_xface import OBS_Xface, OBS_Error
+from get_kb_text import get_kb_text
 
 class Story_Room():
 
@@ -72,10 +73,12 @@ class Story_Room():
 
         self.state = Recording_State.INIT
         self.usb_drive = ''
+        self.output_file_name = ''
 
         self.wm = tk.Tk()
         self.cw = Control_Window(self.wm, self.session_init, self.session_stop, self.debug_exit, debug=self._debug)
         self.tw = Timer_Window(self.wm)
+        #self.kb = get_kb_text(self.wm)
         self.update_state()
         
         self.obs1 = OBS_Xface(host=cfg.obs1_host, port=cfg.obs1_port, password=cfg.obs1_pswd, callback=self.on_obs1_event)
@@ -94,7 +97,7 @@ class Story_Room():
         if len(drives) > 0:
             self.state = Recording_State.DRIVE_INSERTED
             self.usb_drive = drives[0]
-            if self._debug: print(f'>>> usb drive is on {self.usb_drive}')
+            if self._debug: print(f'>>> usb drive is on {self.usb_drive}:')
             self.session_get_filename()
         else:
             self.wm.after(1000, self.wait_for_drive)
@@ -102,13 +105,14 @@ class Story_Room():
     def session_get_filename(self):
         # TODO: get filename and get things ready to record
         self.state = Recording_State.GET_FILENAME
+        self.output_file_name = 'foo.mkv'
+        print(f'>>> get_filename: {self.output_file_name}')
+        self.state = Recording_State.WAIT_FOR_START
         self.cw.enable_start_button()
 
     def session_init(self):
         self.state = Recording_State.COUNTDOWN
         self.cw.disable_start_button()
-        # TODO: detect USB drive and available space (NOTE: only one USB port will be physically exposed, so this will be the non-C: drive)
-        # TODO: get the desired filename
         self.cw.enable_stop_button()
         self.tw.start_countdown('Start recording in {} seconds', 10, 1, 5, 0, self.session_start_recording)
 
@@ -127,7 +131,7 @@ class Story_Room():
         self.obs1.stop_recording()
         self.tw.set_txt('Recording Stopped')
         self.state = Recording_State.COPYING
-        dest_file = '{}\\{}'.format(self.usb_drive, basename(self.obs1.file_name))
+        dest_file = '{}:\\{}'.format(self.usb_drive, basename(self.obs1.file_name))
         if self._debug: print(f'>>> copying {self.obs1.file_name} to {dest_file}')
         # TODO: copy to USB, 
         #self.tw.set_txt('Copying to USB')
