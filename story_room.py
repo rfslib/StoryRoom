@@ -4,7 +4,7 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
-# TODO: detect USB drive and available space (NOTE: only one USB port will be physically exposed, so this will be the non-C: drive)
+# TODO: USB disconnect
 # TODO: get the desired filename
 # TODO: check that OBS is running and start it before starting countdown to recording start
 # TODO: periodically check OBS status (every nn seconds)
@@ -20,7 +20,7 @@ control "Story Room" recording sessions
 # TODO: set filename format (SetFilenameFormatting)
 # TODO: QSG (have this app set all parameters so no manual settings are required)
 # TODO: warn on version mismatch for OBS, websockets and simpleobsws
-# TODO: USB disconnect
+# DONE: detect USB drive and available space (NOTE: only one USB port will be physically exposed, so this will be the non-C: drive)
 # DONE: disable buttons when not valid
 # DONE: finish logic to abort recording (countdown to start vs middle of recording)
 # DONE: button/function to stop recording early
@@ -131,7 +131,7 @@ class Story_Room():
         self.obs1.stop_recording()
         self.tw.set_txt('Recording Stopped')
         self.state = Recording_State.COPYING
-        dest_file = '{}:\\{}'.format(self.usb_drive, basename(self.obs1.file_name))
+        dest_file = '{}:\\{}'.format(self.usb_drive, self.output_file_name)
         if self._debug: print(f'>>> copying {self.obs1.file_name} to {dest_file}')
         # TODO: copy to USB, 
         #self.tw.set_txt('Copying to USB')
