@@ -122,10 +122,15 @@ class Story_Room():
         self.cw.disable_start_button()
         self.cw.enable_stop_button()
         self.obs1.start_recording()
-        self.tw.start_countdown('Recording time remaining: {} minutes', 120, 60, 90, 60, self.session_end_warn)
+        #self.tw.start_countdown(text_string='Recording time remaining: {} minutes',  120, 60, 90, 60, self.session_end_warn)
+        self.tw.start_countdown(msg_text='Recording time remaining: {} minutes', 
+                                length=cfg.recording_length, upd_every=60, warn_at=cfg.recording_warn_at, return_at=60,
+                                callback=self.session_end_warn)
 
     def session_end_warn(self):
-        self.tw.start_countdown('Recording time remaining: {} seconds', 60, 1, 60, 0, self.session_end_recording)
+        self.tw.start_countdown(msg_text='Recording time remaining: {} seconds', 
+                                length=cfg.recording_warn_at, upd_every=1, warn_at=60, return_at=0, 
+                                callback=self.session_end_recording)
 
     def session_end_recording(self):
         self.cw.disable_stop_button()

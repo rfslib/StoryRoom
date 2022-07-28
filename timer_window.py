@@ -58,14 +58,14 @@ class Timer_Window(Toplevel):
         self.foo += 1
         self.after( 1000, self.upd )
 
-    def start_countdown( self, textstring: str, seconds:int , interval: int, warn_at: int, return_at: int, callback ):
+    def start_countdown(self, msg_text:str='countdown: {}', length:int=20, upd_every: int=1, warn_at: int=10, return_at: int=0, callback=None):
         if self.tw_countdown_active: return -1 # a countdown is already active, can't start another
         self.tw_countdown_active = True # set "in-countdown" flag
-        if self.logit: print( f'count down {seconds} seconds, update every {interval} seconds')
-        self.tw_countdown_string = textstring
+        if self.logit: print( f'count down {length} seconds, update every {upd_every} seconds')
+        self.tw_countdown_string = msg_text
         self.countdown_callback = callback
-        self.tw_countdown_seconds = seconds
-        self.tw_countdown_interval = interval
+        self.tw_countdown_seconds = length
+        self.tw_countdown_interval = upd_every
         self.tw_countdown_warn = warn_at
         self.tw_countdown_return = return_at
         self.tw_countdown_complete = False
@@ -106,7 +106,7 @@ class Timer_Window(Toplevel):
             self.lab.config( bg=cfg.tw_normbg )
             self.tw_countdown_complete = True
             self.tw_countdown_active = False # clear in-countdown flag
-            self.countdown_callback()
+            if self.countdown_callback != None: self.countdown_callback()
 
 if __name__ == '__main__':
     root = Tk()
