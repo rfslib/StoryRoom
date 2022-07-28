@@ -4,7 +4,6 @@ author: rfslib
 '''
 
 from tkinter import *
-from tkinter import ttk
 
 from sr_parm import SR_Parm as cfg
 
@@ -87,9 +86,9 @@ class Control_Window(Toplevel):
         self.info_label_2.grid(row=1, column=0, sticky='e')
         self.update()
               
-        if self._debug: 
-            self.bind('<Escape>', self.exit_callback)
-            print('control window ready')
+        if self._debug: print('control window ready')
+
+        self.bind('<Control-Alt-F4>', self.exit_callback)
 
 # ----
 
@@ -121,13 +120,8 @@ class Control_Window(Toplevel):
         self.info_label_2.config(fg=text_color)
         self.info_line_2.set(str(textin))
 
-def test_start_callback():
-    pass
-
-def test_stop_callback():
-    pass
-
 def test_exit_callback(e):
+    print(f'>>> exiting ({e})')
     tst.destroy()
     root.destroy()
 
@@ -135,7 +129,7 @@ if __name__ == '__main__':
     root = Tk()
     root.geometry( '300x100+0+0' )
     root.title( 'close me to exit test' )
-    tst = Control_Window(root, test_start_callback, test_stop_callback, test_exit_callback, debug=True )
+    tst = Control_Window(root, None, None, test_exit_callback, debug=True )
     tst.set_state_line('Stately State', cfg.state_font_color)
     tst.set_info_line_1(cfg.info_line.format('Main', 'test', 0), cfg.text_soft_color)
     tst.set_info_line_2(cfg.info_line.format('Backup', 'test', 0), cfg.text_soft_color)

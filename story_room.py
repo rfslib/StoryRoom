@@ -4,15 +4,13 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
-# TODO: USB disconnect
-# TODO: get the desired filename
+# TODO: USB disconnect (after os.sync)
 # TODO: check that OBS is running and start it before starting countdown to recording start
 # TODO: periodically check OBS status (every nn seconds)
 # TODO: check event against expected action and status
-# TODO: OBS portable mode (config settings are saved in the OBS main folder) see obsproject.com/forum/resources/obs-and-obs-studio-portable-mode-on-windows.359
+# TODO: consider OBS portable mode (config settings are saved in the OBS main folder) see obsproject.com/forum/resources/obs-and-obs-studio-portable-mode-on-windows.359
 # TODO: OBS Event: 'SourceDestroyed', Raw data: {'sourceKind': 'scene', 'sourceName': 'Scene', 'sourceType': 'scene', 'update-type': 'SourceDestroyed'}: close app
 # TODO: capture OS events (i.e., close app, etc.)
-# TODO: detect USB drive, copy file at end of recording, unmount USB drive
 # TODO: catch OBS events (? under what conditions? connect() has to be active)
 # TODO: installer (installation instructions)
 # TODO: (OBS) create sources, lock configuration files
@@ -20,6 +18,8 @@ control "Story Room" recording sessions
 # TODO: set filename format (SetFilenameFormatting)
 # TODO: QSG (have this app set all parameters so no manual settings are required)
 # TODO: warn on version mismatch for OBS, websockets and simpleobsws
+# DONE: detect USB drive, copy file at end of recording
+# DONE: get the desired filename
 # DONE: detect USB drive and available space (NOTE: only one USB port will be physically exposed, so this will be the non-C: drive)
 # DONE: disable buttons when not valid
 # DONE: finish logic to abort recording (countdown to start vs middle of recording)
@@ -69,7 +69,7 @@ class Story_Room():
 
     def __init__(self):
         
-        self._debug = True 
+        self._debug = False 
 
         self.state = Recording_State.INIT
         self.usb_drive = ''
@@ -242,15 +242,29 @@ class Story_Room():
         return drive_list
 
     def debug_exit(self, e):
-        print(f'\n>>> debug exit initiated with {e}')
+        print(f'>>> debug_exit: cancel update_state')       
+        self.wm.after_cancel(self.update_state)     
+        self.cw.set_state_line(f'\n>>> debug_exit: initiated with {e}', cfg.state_font_color)
+        print(f'\n>>> debug_exit: initiated with {e}')
+        print('>>> debug_exit: cancel update_sys_lines')
+        self.wm.after_cancel(self.update_sys_lines) 
+        print('>>> debug_exit: Stopping recording')
         if self.state == Recording_State.RECORDING:
             self.obs1.stop_recording()
-        self.wm.after_cancel(self.update_sys_lines)        
-        self.wm.after_cancel(self.update_state)        
+        print('>>> debug_exit: destroy obs1')
+        self.obs1.__del__()
+        if cfg.obs2_host != '':
+            print('>>> debug_exit: destroy obs2')
+            self.obs2.__del__()
+        print('>>> debug_exit: destroy timer window')
+        self.tw.destroy()       
+        print('>>> debug_exit: destroy keyboard window')
+        self.kb.destroy()
+        print('>>> debug_exit: destroy control window')   
         self.cw.destroy()
-        self.tw.destroy()
+        print('>>> debug_exit: destroy toplevel window')
         self.wm.destroy()
-        print('windows destroyed')
+        print('>>> all windows destroyed')
         exit(255)
 
 if __name__ == '__main__':

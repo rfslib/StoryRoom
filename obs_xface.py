@@ -63,7 +63,7 @@ class OBS_Xface(obsws):
 
     def __del__(self):
         if self._debug: print('\n>>> disconnect websockets')
-        self.loop.run_until_complete(self.__shutdown())
+        self.loop.run_until_complete(self.disconnect())
         if self._debug: print("\n>>> unregister on_obs_event")
         self.loop.run_until_complete(self.unregister(self.on_obs_event))
         if self._debug: print('\n>>> close loop')
@@ -72,10 +72,6 @@ class OBS_Xface(obsws):
         self.loop.stop()
         if self._debug: print("\n>>> waiting 10 seconds")
         sleep(10)
-
-    async def __shutdown(self):
-        await self.disconnect()
-        asyncio.sleep(1)
 
     async def __get_obs_info(self):
         #await self.connect()
