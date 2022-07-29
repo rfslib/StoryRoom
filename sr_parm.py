@@ -4,6 +4,27 @@
     
     purpose: configuration parameters for story_room.pyw
 """
+'''
+A class for the current program state
+'''
+from enum import Enum, auto
+
+class Recording_State(Enum):
+    INIT = 'Initializing the system'           # program initialization
+    WAIT_FOR_DRIVE = 'System Ready. Insert a new USB drive to begin...' # ready to record
+    DRIVE_INSERTED = 'Drive attached.' # a removable drive has been connected
+    GET_FILENAME = 'Enter a name for the video file...'   # get the final filename
+    WAIT_FOR_START = 'Everything is ready. Tap the "Start Recording" button to begin...' # ready to record, waiting for go to start countdown
+    COUNTDOWN = 'Counting down to start of recording. You can leave the room now :)'      # countdown to start of recording is in progress
+    RECORDING = 'Recording. Please wait for the recording time to expire (or press the stop button to end it early).'      # recording is in progress
+    ABORTING = 'Early stop of the recording requested.'       # early stop of recording was requested
+    FINISHING = 'Stopping the Recording.'     # recording stop has been requested
+    FINISHED = 'Recording has stopped. Re-muxing the file and preparing to copy to the USB drive.'       # recording has stopped (reMUX in progress)
+    COPYING = 'Copying the video file to the USB drive. Please wait...'        # video file is being copied to removable drive
+    DRIVE_READY = 'Copy to the USB drive is complete. Please remove the drive now...'    # copy is complete, waiting for drive to be removed
+    DRIVE_REMOVED = 'USB Drive removed. Bringing out the janitorial supplies.'  # drive removed
+    CLEANUP = 'Recording session is over. Preparing the system for the next session.'        # cleanup in progress: extra files being removed, session being reset
+
 
 class SR_Parm():
 
@@ -13,29 +34,39 @@ class SR_Parm():
     stop_btn_txt = 'Stop\nRecording'
     ttl = 'Story Room'       # control window title
     info_line = '{} System Status: {}, Available disk space: {:.1f}G'
+    t_leadin_msg = 'Start recording in {} seconds' # what displays on the monitor (projector) screen
+    t_record_msg = 'Recording time remaining: {} minutes'
+    t_end_msg = 'Recording time remaining: {} seconds'
 
-    # configuration stuff
-    countdown_to_start = 20 # 20 seconds
-    recording_length = 3600 # one hour of recording = 3600 seconds
-    recording_warn_at = 120 # seconds before end of recording to start warning message
+    # timer usage stuff
+    t_leadin_to_start = 20                         # length of the countdown (in seconds)
+    t_leadin_warn_at = 20                          # when to set to warning color (in seconds)
+    t_leadin_return_at = 1                         # when to call the callback
+    t_record_interval = 60                         # how often to update the display (in seconds)
+    t_record_length = 3600                         # one hour of recording = 3600 seconds
+    t_record_warn_at = 120                         # seconds before end of recording to start warning color change
+    t_record_return_at = 60                        # seconds before length to call the callback
+    #tw_end_length = recording_return_at
+    t_end_interval = 1
+    #tw_end_warn_at = recording_return_at
 
     # control_window
-    bg_color = 'LightGreen' # 'SystemButtonFace'
-    bg_alpha = 0.95
-    text_info_color = 'Black'
-    text_warn_color = 'Red'
-    text_done_color = 'DarkGreen'
-    text_soft_color = 'Grey'
-    font_family = 'Consolas'
-    font_bold = 'Consolas Bold'
-    font_italic = 'Consolas Italic'
-    btn_height = 4
-    btn_fontsize = 24
-    btn_idle_color = 'Grey'
-    btn_active_color = 'Red'
-    btn_bg_color = 'SystemButtonFace'
+    c_bg_color = 'LightGreen' # 'SystemButtonFace'
+    c_bg_alpha = 0.95
+    c_text_info_color = 'Black'
+    c_text_warn_color = 'Red'
+    c_text_done_color = 'DarkGreen'
+    c_text_soft_color = 'Grey'
+    c_text_font = 'Consolas'
+    c_bold_font = 'Consolas Bold'
+    c_italic_font = 'Consolas Italic'
+    c_btn_height = 4
+    c_btn_fontsize = 24
+    c_btn_idle_color = 'Grey'
+    c_btn_active_color = 'Red'
+    c_btn_bg_color = 'SystemButtonFace'
 
-    font = 'Lucida Console'    # primary font for text
+    #font = 'Lucida Console'    # primary font for text
     fontsize = 48              # font size
     fontcolor = '#100010'
     padxy = 4                   # padding inside of frames
