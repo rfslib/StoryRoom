@@ -5,6 +5,9 @@ author: rfslib
 control "Story Room" recording sessions
 '''
 # TODO: USB disconnect (after os.sync)
+# TODO: verify space on USB drive
+# TODO: verify space on system drive(s)
+# TODO: copy overwrite destination: verify it doesn't exist or add date and time to output filename
 # TODO: check that OBS is running and start it before starting countdown to recording start
 # TODO: periodically check OBS status (every nn seconds)
 # TODO: check event against expected action and status
@@ -32,7 +35,10 @@ version = '20220725'
 
 import tkinter as tk
 from time import sleep
-import psutil
+#import psutil
+from psutil import disk_partitions
+from psutil import disk_usage
+
 from os.path import basename
 from shutil import copy
 
@@ -81,11 +87,10 @@ class Story_Room():
             self.wm.after(1000, self.wait_for_drive)
 
     def session_get_filename(self):
-        # TODO: get filename and get things ready to record
         self.state = Recording_State.GET_FILENAME
         self.output_file_name = self.kb.get_text('Enter filename: ')
         ### NOTE: if output_file_name is left an empty string, it will use basename in session_end_recording() 
-        print(f'>>> get_filename: {self.output_file_name}')
+        if self._debug: print(f'>>> session_get_filename: {self.output_file_name}')
         self.state = Recording_State.WAIT_FOR_START
         self.cw.enable_start_button()
 
@@ -108,25 +113,6 @@ class Story_Room():
         self.tw.start_countdown(msg_text=cfg.t_end_msg, length=cfg.t_record_return_at, 
             upd_every=cfg.t_end_interval, warn_at=cfg.t_record_return_at, return_at=0, callback=self.session_end_recording)
 
-    def session_end_recording(self):
-        self.cw.disable_stop_button()
-        self.obs1.stop_recording()
-        self.tw.set_txt('Recording Stopped')
-        self.state = Recording_State.COPYING
-        self.tw.set_txt('Copying the video to the USB drive...')
-        if self.output_file_name == '':
-            self.output_file_name = basename(self.obs1.file_name)
-        else:
-            self.output_file_name += '.mkv'
-        dest_file = '{}:\\{}'.format(self.usb_drive, self.output_file_name)
-        if self._debug: print(f'>>> copying {self.obs1.file_name} to {dest_file}')
-        # TODO: copy to USB, 
-        #self.tw.set_txt('Copying to USB')
-        copy(self.obs1.file_name, dest_file)
-        if self._debug: sleep(5) # pretend to copy
-        # TODO: save to archive
-        self.session_reset()
-
     def session_stop(self): # early stop of recording
         if self._debug: print('aborting')
         if self.state == Recording_State.COUNTDOWN:
@@ -135,7 +121,36 @@ class Story_Room():
         elif self.state == Recording_State.RECORDING:
             self.state = Recording_State.ABORTING
             self.tw.stop_countdown(self.session_end_recording)
-        
+
+    def session_end_recording(self): # stop recording and copy to USB, then prompt to remove drive
+        # stop the recording
+        self.state = Recording_State.FINISHING
+        self.cw.disable_stop_button()
+        self.obs1.stop_recording()
+        self.tw.set_txt('Recording Stopped')
+        # build the output filename and copy
+        if self.output_file_name == '': # if no file name given, use default from OBS
+            self.output_file_name = basename(self.obs1.file_name)
+        else:
+            self.output_file_name += '.mkv'
+        dest_filename = '{}:\\{}'.format(self.usb_drive, self.output_file_name)
+        if self._debug: print(f'>>> copying {self.obs1.file_name} to {dest_filename}') 
+        self.tw.set_txt('Copying video to USB')
+        self.state = Recording_State.COPYING
+        self.tw.set_txt('Copying the video to the USB drive...')
+        copy(self.obs1.file_name, dest_filename)
+        if self._debug: sleep(5) # lengthen copy time to verify prompts
+        # clear variables, etc. for the next session
+        self.state = Recording_State.DRIVE_READY
+        self.wait_for_drive_removal()
+
+    def wait_for_drive_removal(self):
+        drives = self.get_drives()
+        if len(drives) > 0:
+            self.wm.after(1000, self.wait_for_drive_removal)
+        else:
+            self.session_reset()
+  
     def session_reset(self): # reset environment for next recording
         self.state = Recording_State.FINISHING
         if self._debug: print('session_reset')
@@ -144,6 +159,7 @@ class Story_Room():
         self.cw.disable_start_button()
         self.usb_drive = ''
         self.state = Recording_State.WAIT_FOR_DRIVE
+        self.wait_for_drive() # wait for next USB drive to start next session
 
     def update_state(self):
         self.cw.set_state_line(self.state.value, cfg.state_font_color)
@@ -157,12 +173,12 @@ class Story_Room():
         print(f'on_obs2_event: {desc}')
 
     def update_sys_lines(self):
-        if self._debug: print('>>> update_sys_lines')
+        if self._debug: print('>>> update_sys_lines: ')
         if self.obs1.disk_space < cfg.free_disk_min:
             text_color=cfg.c_text_warn_color
         else:
             text_color=cfg.c_text_info_color
-        self.cw.set_info_line_1(cfg.info_line.format('Main', self.obs1.obs_status, self.obs1.disk_space/1024 ), text_color) 
+        self.cw.set_info_line_1(cfg.info_line.format('Main System', self.obs1.obs_status, self.obs1.disk_space/1024 ), text_color) 
 
         if cfg.obs2_host == '':
             self.cw.set_info_line_2('Backup system not configured', cfg.c_text_info_color)
@@ -171,16 +187,22 @@ class Story_Room():
                 text_color=cfg.c_text_warn_color
             else:
                 text_color=cfg.c_text_info_color
-            self.cw.set_info_line_2(cfg.info_line.format('Backup', self.obs2.obs_status, self.obs2.disk_space/1024 ), text_color) 
+            self.cw.set_info_line_2(cfg.info_line.format('Backup System', self.obs2.obs_status, self.obs2.disk_space/1024 ), text_color) 
+
+        if self.usb_drive != '':
+            usb_free_disk = disk_usage('{}:\\'.format(self.usb_drive)).free / 1024 / 1024 / 1024
+            text_color=cfg.c_text_info_color
+            self.cw.set_info_line_3(cfg.info_line.format('USB Drive', 'available', usb_free_disk), text_color)
 
         self.wm.after(cfg.fd_delay, self.update_sys_lines) 
 
     def get_drives(self): # return a list of current drives
         drive_list = []
-        disk_info = psutil.disk_partitions()
+        disk_info = disk_partitions()
         for drive in disk_info:
             if 'removable' in drive.opts.lower():
                 drive_list.append(drive.mountpoint[0])
+        if self._debug: print(f'>>> disk_info: {disk_info}\n>>> drive_list: {drive_list}')
         return drive_list
 
     def debug_exit(self, e):

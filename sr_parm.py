@@ -33,7 +33,7 @@ class SR_Parm():
     start_btn_txt = 'Start\nRecording'
     stop_btn_txt = 'Stop\nRecording'
     ttl = 'Story Room'       # control window title
-    info_line = '{} System Status: {}, Available disk space: {:.1f}G'
+    info_line = '{} Status: {}, Available disk space: {:.1f}G'
     t_leadin_msg = 'Start recording in {} seconds' # what displays on the monitor (projector) screen
     t_record_msg = 'Recording time remaining: {} minutes'
     t_end_msg = 'Recording time remaining: {} seconds'
@@ -76,7 +76,7 @@ class SR_Parm():
     state_font_color = 'DarkBlue'
 
     free_disk_min = 5000.0 # minimum available space on disk before displaying warning
-    fd_delay = 20000  # 60000 to update available disk space once a minute
+    fd_delay = 5000  # 60000 to update available disk space once a minute
 
     # OBS
     obs_processname = 'obs64.exe'

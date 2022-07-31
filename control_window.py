@@ -75,17 +75,22 @@ class Control_Window(Toplevel):
         self.info_frame = Frame(master=self, bg=cfg.c_bg_color, padx=cfg.padxy, pady=cfg.padxy)
         self.info_frame.grid(row=6, column=0, padx=cfg.padxy, pady=cfg.padxy, sticky = 'e')
 
-        self.info_line_1=StringVar()
+        self.info_line_1 = StringVar()
         self.info_label_1 = Label(master=self.info_frame, textvariable=self.info_line_1, anchor='e',
             fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.info_fontsize))
         self.info_label_1.grid(row=0, column=0, sticky='e')
 
-        self.info_line_2=StringVar()
+        self.info_line_2 = StringVar()
         self.info_label_2 = Label(master=self.info_frame, textvariable=self.info_line_2, anchor='e', 
             fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.info_fontsize))
         self.info_label_2.grid(row=1, column=0, sticky='e')
-        self.update()
-              
+
+        self.info_line_3 = StringVar()
+        self.info_label_3 = Label(master=self.info_frame, textvariable=self.info_line_3, anchor='e', 
+            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.info_fontsize))
+        self.info_label_3.grid(row=2, column=0, sticky='e')
+
+        self.update()      
         if self._debug: print('control window ready')
 
         self.bind('<Control-Alt-F4>', self.exit_callback)
@@ -120,6 +125,12 @@ class Control_Window(Toplevel):
         self.info_label_2.config(fg=text_color)
         self.info_line_2.set(str(textin))
 
+    def set_info_line_3(self, textin, text_color):
+        self.info_label_3.config(fg=text_color)
+        self.info_line_3.set(str(textin))
+
+## --- testing stuff ensues
+#         
 def test_exit_callback(e):
     print(f'>>> exiting ({e})')
     tst.destroy()
@@ -131,6 +142,7 @@ if __name__ == '__main__':
     root.title( 'close me to exit test' )
     tst = Control_Window(root, None, None, test_exit_callback, debug=True )
     tst.set_state_line('Stately State', cfg.state_font_color)
-    tst.set_info_line_1(cfg.info_line.format('Main', 'test', 0), cfg.c_text_soft_color)
-    tst.set_info_line_2(cfg.info_line.format('Backup', 'test', 0), cfg.c_text_soft_color)
+    tst.set_info_line_1(cfg.info_line.format('Main System', 'test', 0), cfg.c_text_soft_color)
+    tst.set_info_line_2(cfg.info_line.format('Backup System', 'test', 0), cfg.c_text_soft_color)
+    tst.set_info_line_3(cfg.info_line.format('USB', 'test', 0), cfg.c_text_soft_color)
     root.mainloop()
