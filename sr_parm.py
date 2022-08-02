@@ -39,6 +39,7 @@ class SR_Parm():
     t_end_msg = 'Recording time remaining: {} seconds'
 
     # timer usage stuff
+    t_drift = 1-(100/3600) # allow time for processing between .after calls; varies per machine
     t_leadin_to_start = 20                         # length of the countdown (in seconds)
     t_leadin_warn_at = 20                          # when to set to warning color (in seconds)
     t_leadin_return_at = 1                         # when to call the callback
@@ -65,6 +66,7 @@ class SR_Parm():
     c_btn_idle_color = 'Grey'
     c_btn_active_color = 'Red'
     c_btn_bg_color = 'SystemButtonFace'
+    c_time_left_fontsize = 64
 
     #font = 'Lucida Console'    # primary font for text
     fontsize = 48              # font size

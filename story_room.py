@@ -4,6 +4,8 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
+# TODO: all logic needs review after moving countdown stuff from timer_window
+# TODO: prompt to remove drive if already inserted on startup (prompts for name twice as well :p)
 # TODO: USB disconnect (after os.sync)
 # TODO: verify space on USB drive
 # TODO: verify space on system drive(s)
@@ -51,9 +53,20 @@ from get_kb_text import get_kb_text
 
 class Story_Room():
 
+    ## countdown stuff, set in start_countdown()
+    tw_countdown_seconds = 10
+    tw_countdown_active = False
+    tw_countdown_complete = False
+    tw_countdown_interval = 1
+    tw_countdown_warn = 5
+    tw_countdown_return = 0 # non-zero value means exec callback at n seconds
+    tw_countdown_string = '{} seconds remaining'
+    tw_countdown_abort = False
+
+
     def __init__(self):
         
-        self._debug = False 
+        self._debug = True 
 
         self.state = Recording_State.INIT
         self.usb_drive = ''
@@ -98,7 +111,7 @@ class Story_Room():
         self.state = Recording_State.COUNTDOWN
         self.cw.disable_start_button()
         self.cw.enable_stop_button()
-        self.tw.start_countdown(msg_text=cfg.t_leadin_msg, length=cfg.t_leadin_to_start, 
+        self.start_countdown(msg_text=cfg.t_leadin_msg, length=cfg.t_leadin_to_start, 
             upd_every=1, warn_at=cfg.t_leadin_warn_at, return_at=0, callback=self.session_start_recording)
 
     def session_start_recording( self ):
@@ -106,11 +119,11 @@ class Story_Room():
         self.cw.disable_start_button()
         self.cw.enable_stop_button()
         self.obs1.start_recording()
-        self.tw.start_countdown(msg_text=cfg.t_record_msg, length=cfg.t_record_length,
+        self.start_countdown(msg_text=cfg.t_record_msg, length=cfg.t_record_length,
             upd_every=cfg.t_record_interval, warn_at=cfg.t_record_warn_at, return_at=cfg.t_record_return_at, callback=self.session_end_warn)
 
     def session_end_warn(self):
-        self.tw.start_countdown(msg_text=cfg.t_end_msg, length=cfg.t_record_return_at, 
+        self.start_countdown(msg_text=cfg.t_end_msg, length=cfg.t_record_return_at, 
             upd_every=cfg.t_end_interval, warn_at=cfg.t_record_return_at, return_at=0, callback=self.session_end_recording)
 
     def session_stop(self): # early stop of recording
@@ -120,12 +133,13 @@ class Story_Room():
             self.tw.stop_countdown(self.session_reset)
         elif self.state == Recording_State.RECORDING:
             self.state = Recording_State.ABORTING
-            self.tw.stop_countdown(self.session_end_recording)
+            self.stop_countdown(self.session_end_recording)
 
     def session_end_recording(self): # stop recording and copy to USB, then prompt to remove drive
         # stop the recording
         self.state = Recording_State.FINISHING
         self.cw.disable_stop_button()
+        self.cw.set_time_left('', cfg.c_text_soft_color)
         self.obs1.stop_recording()
         self.tw.set_txt('Recording Stopped')
         # build the output filename and copy
@@ -174,12 +188,13 @@ class Story_Room():
 
     def update_sys_lines(self):
         if self._debug: print('>>> update_sys_lines: ')
+        # update main recording system status
         if self.obs1.disk_space < cfg.free_disk_min:
             text_color=cfg.c_text_warn_color
         else:
             text_color=cfg.c_text_info_color
         self.cw.set_info_line_1(cfg.info_line.format('Main System', self.obs1.obs_status, self.obs1.disk_space/1024 ), text_color) 
-
+        # update backup recording system status if configured
         if cfg.obs2_host == '':
             self.cw.set_info_line_2('Backup system not configured', cfg.c_text_info_color)
         else:
@@ -188,12 +203,12 @@ class Story_Room():
             else:
                 text_color=cfg.c_text_info_color
             self.cw.set_info_line_2(cfg.info_line.format('Backup System', self.obs2.obs_status, self.obs2.disk_space/1024 ), text_color) 
-
+        # update ubs drive status if present
         if self.usb_drive != '':
             usb_free_disk = disk_usage('{}:\\'.format(self.usb_drive)).free / 1024 / 1024 / 1024
             text_color=cfg.c_text_info_color
             self.cw.set_info_line_3(cfg.info_line.format('USB Drive', 'available', usb_free_disk), text_color)
-
+        # re-run ourself in a few seconds
         self.wm.after(cfg.fd_delay, self.update_sys_lines) 
 
     def get_drives(self): # return a list of current drives
@@ -205,12 +220,67 @@ class Story_Room():
         if self._debug: print(f'>>> disk_info: {disk_info}\n>>> drive_list: {drive_list}')
         return drive_list
 
+# --- timer stuff
+
+    def start_countdown(self, msg_text:str='countdown: {}', length:int=20, upd_every: int=1, warn_at: int=10, return_at: int=0, callback=None):
+        if self.tw_countdown_active: return -1 # a countdown is already active, can't start another
+        self.tw_countdown_active = True # set "in-countdown" flag
+        if self._debug: print(f'>>> start_countdown: count down {length} seconds, update every {upd_every} seconds')
+        self.tw_countdown_string = msg_text
+        self.countdown_callback = callback
+        self.tw_countdown_seconds = length
+        self.tw_countdown_interval = upd_every
+        self.tw_countdown_warn = warn_at
+        self.tw_countdown_return = return_at
+        self.tw_countdown_complete = False
+        self.tw_countdown_abort = False
+        self.tw.set_alpha(cfg.tw_normalpha)
+        self.tw.set_bg(cfg.tw_normbg)
+        self.countdown()  # start the countdown
+
+    def stop_countdown(self, new_callback): # tell the current countdown to stop early
+        self.countdown_callback = new_callback
+        self.tw_countdown_abort = True
+
+    def countdown(self):
+        if self.tw_countdown_abort: # early stop flag set
+            self.tw.set_txt('Stopped')
+            if self._debug: print('>>> countdown: aborted')
+            self.tw.set_alpha(cfg.tw_normalpha)
+            self.tw.set_bg(cfg.tw_normbg)
+            self.tw.set_label_bg(cfg.tw_normbg)
+            self.tw_countdown_complete = True
+            self.tw_countdown_active = False # clear in-countdown flag
+            if self.countdown_callback != None: self.countdown_callback()
+        elif self.tw_countdown_seconds > self.tw_countdown_return: # still time left
+            if self.tw_countdown_seconds <= self.tw_countdown_warn:
+                self.tw.set_alpha(cfg.tw_warnalpha)
+                self.tw.set_bg(cfg.tw_warnbg)
+                self.tw.set_label_bg(cfg.tw_warnbg)
+            if not (self.tw_countdown_seconds % self.tw_countdown_interval): # update at every 'interval'
+                self.tw.set_txt(self.tw_countdown_string.format(int(self.tw_countdown_seconds / self.tw_countdown_interval)))
+                if self._debug: print(f'>>> countdown: at {self.tw_countdown_seconds} seconds')
+                self.cw.set_time_left(int(self.tw_countdown_seconds / 60), cfg.c_text_info_color)
+            self.tw_countdown_seconds -= 1
+            self.wm.after(cfg.t_drift * 1000, self.countdown)
+        else: # time is up
+            self.tw.set_txt('')
+            if self._debug: print( '>>> countdown: complete')
+            self.tw.set_alpha(cfg.tw_normalpha)
+            self.tw.set_bg(cfg.tw_normbg)
+            self.tw.set_label_bg(cfg.tw_normbg)
+            self.tw_countdown_complete = True
+            self.tw_countdown_active = False # clear in-countdown flag
+            if self.countdown_callback != None: self.countdown_callback()
+
+# --- end timer stuff
+
     def debug_exit(self, e):
         self.cw.withdraw()     
         self.wm.after_cancel(self.update_state)     
         self.cw.set_state_line(f'\n>>> debug_exit: initiated with {e}', cfg.state_font_color)
         print(f'\n>>> debug_exit: initiated with {e}')
-        self.wm.after_cancel(self.update_sys_lines) 
+        self.wm.after_cancel(self.update_sys_lines)
         self.tw.destroy()   
         self.kb.destroy()    
         if self.state == Recording_State.RECORDING:

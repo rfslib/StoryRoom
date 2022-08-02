@@ -55,20 +55,26 @@ class Control_Window(Toplevel):
                             font=(cfg.c_bold_font, cfg.state_font_size))
         self.state_label.grid(row=0, column=0, sticky='w')
         
-
         # create a frame for interactions (buttons, text entry, etc.)
         self.int_frame = Frame(master=self, bg=cfg.c_bg_color, padx=cfg.padxy, pady=cfg.padxy)
         self.int_frame.grid(row=2, column=0, padx=cfg.padxy, pady=cfg.padxy, sticky='ewn')
+        
         self.btn_start= Button(self.int_frame, height=cfg.c_btn_height, relief=GROOVE, bg=cfg.c_btn_bg_color,
             text=cfg.start_btn_txt, font=(cfg.c_bold_font, cfg.c_btn_fontsize),
             command=self.start_callback)
         self.btn_start.grid(row=0, column=0, padx=cfg.padxy, pady=cfg.padxy)
         self.disable_start_button()
+        
         self.btn_stop= Button(self.int_frame, height=cfg.c_btn_height, relief=GROOVE, bg=cfg.c_btn_bg_color,
             text=cfg.stop_btn_txt, font=(cfg.c_bold_font, cfg.c_btn_fontsize),
             command=self.stop_callback)
         self.btn_stop.grid(row=0, column=1, padx=cfg.padxy, pady=cfg.padxy)
         self.disable_stop_button()
+
+        self._time_left = StringVar()
+        self.time_left = Label(master=self.int_frame, textvariable=self._time_left, anchor='w',
+            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.c_time_left_fontsize))
+        self.time_left.grid(row=0, column=2, sticky='w')
         self.update
 
         # "info" frame
@@ -128,6 +134,11 @@ class Control_Window(Toplevel):
     def set_info_line_3(self, textin, text_color):
         self.info_label_3.config(fg=text_color)
         self.info_line_3.set(str(textin))
+
+    def set_time_left(self, textin, text_color):
+        self.time_left.config(fg=text_color)
+        self._time_left.set(str(textin))
+
 
 ## --- testing stuff ensues
 #         
