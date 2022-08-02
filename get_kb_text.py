@@ -6,10 +6,12 @@ purpose: allow and get entry of a text string via a virtual keyboard using tkint
 
 adapted from https://masterprograming.com/how-to-create-virtual-onscreen-keyboard-using-python-and-tkinter/
     20220727: note that the above site disappeared the day after
+for font style changes see https://www.pythontutorial.net/tkinter/ttk-style/
 '''
 
 from tkinter import *
 from tkinter import ttk
+from tkinter import font
 
 class get_kb_text(Toplevel):
 
@@ -18,90 +20,95 @@ class get_kb_text(Toplevel):
     def __init__(self, master): # Create the keyboard window, then hide (withdraw) it
         Toplevel.__init__(self, master)
 
-        self.withdraw() # hide already
+        self.withdraw() # hide already so it doesn't flash while being build
         
         self.text = StringVar()         # update this to force exit
         self.text_prompt = StringVar()  # changeable prompt
-        self.text_entry = StringVar()   # where the text string is built and displayed
+        self.text_entry = StringVar()   # where the text string is built
 
-        self.key_width = 6
-        self.font = 'Lucida Console'
-        self.font_size = 10.5
-        #self.key_offset = self.key_width / 3 # rows are staggered by 1/3 key width
-        self.xpad = 6
-        self.ypad = 10
-        #self.xwidth = (12 * (self.key_width * self.font_size) ) + (13 * self.xpad)
+        self.ixpad = 3 # was 6
+        self.iypad = 5 # was 10
+        self.xpad = 1
+        self.ypad = 1
+        self.key_width = 4
+        paddings = {'ipadx': self.ixpad, 'ipady': self.iypad, 'padx': self.xpad, 'pady': self.ypad}
+        entry_font = {'font': ('Consolas Bold', 14)}
+        self.style = ttk.Style(self)
+        #self.style.configure('TEntry', font=('Consolas Bold', 11))
+        self.style.configure('TLabel', font=('Consolas', 10))
+        self.style.configure('TButton', font=('Consolas Bold', 14))
         
         self.overrideredirect(True) # don't show title 
         self.attributes('-topmost', 1) # stay on top
-        self.geometry('+100+500')
+        self.geometry('+100+500') ## TODO: make this dynamic: bottom of screen, approx centered
         
-        self.config(bg = 'DarkGrey')    #  add background color
+        self.config(bg = 'Green')    #  add background color 'SystemButtonFace'
 
         # display prompt
         self.text_prompt.set('Use the on-screen keyboard: ')
         self.text_label = ttk.Label(self, textvariable=self.text_prompt, anchor='e')
-        self.text_label.grid(row=0, column=0, rowspan=1, columnspan=3, ipadx=(self.key_width*3)+(self.xpad*4), ipady=self.ypad)
-        
-        # text entry area
-        self.text_entry.set('')
-        text_entry = ttk.Entry(self, state='readonly', textvariable = self.text_entry)
-        text_entry.grid(row=0, column=3, rowspan=1, columnspan=10, ipadx=(self.key_width*8)+(self.xpad*7) , ipady=self.ypad, sticky='w')
+        self.text_label.grid(row=0, column=0, rowspan=1, columnspan=3, sticky='we')
 
+        # text entry display area
+        self.text_entry.set('')
+        text_entry = ttk.Entry(self, state='readonly', textvariable=self.text_entry, **entry_font)
+        text_entry.grid(row=0, column=3, rowspan=1, columnspan=8, sticky='we')
+            
         # add buttons for the number line
-        ttk.Button(self, text='1', width=6, command=lambda : self._key_press('1')).grid(row=1, column=0, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='2', width=6, command=lambda : self._key_press('2')).grid(row=1, column=1, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='3', width=6, command=lambda : self._key_press('3')).grid(row=1, column=2, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='4', width=6, command=lambda : self._key_press('1')).grid(row=1, column=3, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='5', width=6, command=lambda : self._key_press('5')).grid(row=1, column=4, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='6', width=6, command=lambda : self._key_press('6')).grid(row=1, column=5, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='7', width=6, command=lambda : self._key_press('7')).grid(row=1, column=6, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='8', width=6, command=lambda : self._key_press('8')).grid(row=1, column=7, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='9', width=6, command=lambda : self._key_press('9')).grid(row=1, column=8, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='0', width=6, command=lambda : self._key_press('0')).grid(row=1, column=9, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='Clear', width=(self.key_width*2)+self.xpad, command=self._clear_value
-            ).grid(row=1, column=10, columnspan=2, ipadx=self.xpad, ipady=self.ypad)
+        ttk.Button(self, text='1', width=self.key_width, command=lambda : self._key_press('1')).grid(row=1, column=0, **paddings)
+        ttk.Button(self, text='2', width=self.key_width, command=lambda : self._key_press('2')).grid(row=1, column=1, **paddings)
+        ttk.Button(self, text='3', width=self.key_width, command=lambda : self._key_press('3')).grid(row=1, column=2, **paddings)
+        ttk.Button(self, text='4', width=self.key_width, command=lambda : self._key_press('4')).grid(row=1, column=3, **paddings)
+        ttk.Button(self, text='5', width=self.key_width, command=lambda : self._key_press('5')).grid(row=1, column=4, **paddings)
+        ttk.Button(self, text='6', width=self.key_width, command=lambda : self._key_press('6')).grid(row=1, column=5, **paddings)
+        ttk.Button(self, text='7', width=self.key_width, command=lambda : self._key_press('7')).grid(row=1, column=6, **paddings)
+        ttk.Button(self, text='8', width=self.key_width, command=lambda : self._key_press('8')).grid(row=1, column=7, **paddings)
+        ttk.Button(self, text='9', width=self.key_width, command=lambda : self._key_press('9')).grid(row=1, column=8, **paddings)
+        ttk.Button(self, text='0', width=self.key_width, command=lambda : self._key_press('0')).grid(row=1, column=9, **paddings)
+        # backspace options: '‹','←','◄','<-','BACK', 'Back'
+        ttk.Button(self, text='Back', width=self.key_width, command=self._process_backspace).grid(row=1, column=10, **paddings) 
 
         # 2nd row (qwerty)
-        ttk.Button(self, text='Q' , width=self.key_width, command=lambda : self._key_press('Q')).grid(row=2, column=0, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='W' , width=self.key_width, command=lambda : self._key_press('W')).grid(row=2, column=1, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='E' , width=self.key_width, command=lambda : self._key_press('E')).grid(row=2, column=2, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='R' , width=self.key_width, command=lambda : self._key_press('R')).grid(row=2, column=3, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='T' , width=self.key_width, command=lambda : self._key_press('T')).grid(row=2, column=4, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='Y' , width=self.key_width, command=lambda : self._key_press('Y')).grid(row=2, column=5, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='U' , width=self.key_width, command=lambda : self._key_press('U')).grid(row=2, column=6, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='I' , width=self.key_width, command=lambda : self._key_press('I')).grid(row=2, column=7, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='O' , width=self.key_width, command=lambda : self._key_press('O')).grid(row=2, column=8, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='P' , width=self.key_width, command=lambda : self._key_press('P')).grid(row=2, column=9, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='(' , width=self.key_width, command=lambda : self._key_press('(')).grid(row=2, column=10, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text=')' , width=self.key_width, command=lambda : self._key_press(')')).grid(row=2, column=11, ipadx=self.xpad, ipady=self.ypad)
+        ttk.Button(self, text='Q' , width=self.key_width, command=lambda : self._key_press('Q')).grid(row=2, column=0, **paddings)
+        ttk.Button(self, text='W' , width=self.key_width, command=lambda : self._key_press('W')).grid(row=2, column=1, **paddings)
+        ttk.Button(self, text='E' , width=self.key_width, command=lambda : self._key_press('E')).grid(row=2, column=2, **paddings)
+        ttk.Button(self, text='R' , width=self.key_width, command=lambda : self._key_press('R')).grid(row=2, column=3, **paddings)
+        ttk.Button(self, text='T' , width=self.key_width, command=lambda : self._key_press('T')).grid(row=2, column=4, **paddings)
+        ttk.Button(self, text='Y' , width=self.key_width, command=lambda : self._key_press('Y')).grid(row=2, column=5, **paddings)
+        ttk.Button(self, text='U' , width=self.key_width, command=lambda : self._key_press('U')).grid(row=2, column=6, **paddings)
+        ttk.Button(self, text='I' , width=self.key_width, command=lambda : self._key_press('I')).grid(row=2, column=7, **paddings)
+        ttk.Button(self, text='O' , width=self.key_width, command=lambda : self._key_press('O')).grid(row=2, column=8, **paddings)
+        ttk.Button(self, text='P' , width=self.key_width, command=lambda : self._key_press('P')).grid(row=2, column=9, **paddings)
 
         # 3rd row (asdfg)
-        ttk.Button(self, text='A' , width=self.key_width, command=lambda : self._key_press('A')).grid(row=3, column=0, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='S' , width=self.key_width, command=lambda : self._key_press('S')).grid(row=3, column=1, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='D' , width=self.key_width, command=lambda : self._key_press('D')).grid(row=3, column=2, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='F' , width=self.key_width, command=lambda : self._key_press('F')).grid(row=3, column=3, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='G' , width=self.key_width, command=lambda : self._key_press('G')).grid(row=3, column=4, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='H' , width=self.key_width, command=lambda : self._key_press('H')).grid(row=3, column=5, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='J' , width=self.key_width, command=lambda : self._key_press('J')).grid(row=3, column=6, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='K' , width=self.key_width, command=lambda : self._key_press('K')).grid(row=3, column=7, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='L' , width=self.key_width, command=lambda : self._key_press('L')).grid(row=3, column=8, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='Enter', width=(self.key_width*3)+(self.xpad*2), command=self._process_enter
-            ).grid(row=3, column=9, columnspan=3, ipadx=self.xpad, ipady=self.ypad)
+        ttk.Button(self, text='A' , width=self.key_width, command=lambda : self._key_press('A')).grid(row=3, column=0, **paddings)
+        ttk.Button(self, text='S' , width=self.key_width, command=lambda : self._key_press('S')).grid(row=3, column=1, **paddings)
+        ttk.Button(self, text='D' , width=self.key_width, command=lambda : self._key_press('D')).grid(row=3, column=2, **paddings)
+        ttk.Button(self, text='F' , width=self.key_width, command=lambda : self._key_press('F')).grid(row=3, column=3, **paddings)
+        ttk.Button(self, text='G' , width=self.key_width, command=lambda : self._key_press('G')).grid(row=3, column=4, **paddings)
+        ttk.Button(self, text='H' , width=self.key_width, command=lambda : self._key_press('H')).grid(row=3, column=5, **paddings)
+        ttk.Button(self, text='J' , width=self.key_width, command=lambda : self._key_press('J')).grid(row=3, column=6, **paddings)
+        ttk.Button(self, text='K' , width=self.key_width, command=lambda : self._key_press('K')).grid(row=3, column=7, **paddings)
+        ttk.Button(self, text='L' , width=self.key_width, command=lambda : self._key_press('L')).grid(row=3, column=8, **paddings)
+        ttk.Button(self, text='Enter', width=(self.key_width*2)+(self.ixpad*1), command=self._process_enter
+            ).grid(row=3, column=9, columnspan=2, **paddings)
 
         # 4th row (zxcvb)
-        ttk.Button(self, text='Z' , width=self.key_width, command=lambda : self._key_press('Z')).grid(row=4, column=0, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='X' , width=self.key_width, command=lambda : self._key_press('X')).grid(row=4, column=1, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='C' , width=self.key_width, command=lambda : self._key_press('C')).grid(row=4, column=2, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='V' , width=self.key_width, command=lambda : self._key_press('V')).grid(row=4, column=3, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='B' , width=self.key_width, command=lambda : self._key_press('B')).grid(row=4, column=4, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='N' , width=self.key_width, command=lambda : self._key_press('N')).grid(row=4, column=5, ipadx=self.xpad, ipady=self.ypad)
-        ttk.Button(self, text='M' , width=self.key_width, command=lambda : self._key_press('M')).grid(row=4, column=6, ipadx=self.xpad, ipady=self.ypad)
-        #ttk.Button(self, text='.' , width=self.key_width, command=lambda : self.key_press('.')).grid(row=4, column=8, ipadx=self.xpad, ipady=self.ypad)
+        ttk.Button(self, text='Z' , width=self.key_width, command=lambda : self._key_press('Z')).grid(row=4, column=0, **paddings)
+        ttk.Button(self, text='X' , width=self.key_width, command=lambda : self._key_press('X')).grid(row=4, column=1, **paddings)
+        ttk.Button(self, text='C' , width=self.key_width, command=lambda : self._key_press('C')).grid(row=4, column=2, **paddings)
+        ttk.Button(self, text='V' , width=self.key_width, command=lambda : self._key_press('V')).grid(row=4, column=3, **paddings)
+        ttk.Button(self, text='B' , width=self.key_width, command=lambda : self._key_press('B')).grid(row=4, column=4, **paddings)
+        ttk.Button(self, text='N' , width=self.key_width, command=lambda : self._key_press('N')).grid(row=4, column=5, **paddings)
+        ttk.Button(self, text='M' , width=self.key_width, command=lambda : self._key_press('M')).grid(row=4, column=6, **paddings)
+        ttk.Button(self, text='(' , width=self.key_width, command=lambda : self._key_press('(')).grid(row=4, column=7, **paddings)
+        ttk.Button(self, text=')' , width=self.key_width, command=lambda : self._key_press(')')).grid(row=4, column=8, **paddings)
 
         # 5th row (space bar)
-        ttk.Button(self, text='Space' , width=(self.key_width*9)+(self.xpad*8), command=lambda : self._key_press(' ')
-            ).grid(row=5, column=0, columnspan=9, ipadx=self.xpad, ipady=self.ypad)
+        ttk.Button(self, text='Space' , width=(self.key_width*9)+(self.ixpad*7), command=lambda : self._key_press('_')
+            ).grid(row=5, column=0, columnspan=9, **paddings)
+        ttk.Button(self, text='Clear', width=(self.key_width*2)+(self.ixpad*0), command=self._clear_value
+            ).grid(row=5, column=9, columnspan=2, **paddings)
 
         self.update()
         self.resizable(False, False)
@@ -113,12 +120,15 @@ class get_kb_text(Toplevel):
     def _clear_value(self):
         self.text_entry.set('')
 
-    # Enter ('Return') Button cause the window to hide and returns the string that was entered
+    # backspace: remove the last character of the entry
+    def _process_backspace(self):
+        self.text_entry.set(self.text_entry.get()[:-1]) # no exception even when string is empty :p
+
+    # Enter ('Return') Button sets self.text, which triggers the wait_variable in get_text()
     def _process_enter(self):
         self.text.set(self.text_entry.get())
-        #self.withdraw()
-        #return self.text
 
+    # note that this waits for a changed to text_entry (wait_variable), which is done by _process_enter
     def get_text(self, prompt): # the public method to get some text
         self.text_prompt.set(prompt)
         self.text_entry.set('')
@@ -135,7 +145,7 @@ def test_get_text(data):
     ret = '.'
     ctr = 1
     while ret != '':
-        ret = gf.get_text(f'Enter something ({ctr}): ')
+        ret = gf.get_text(f'Empty string to end({ctr}): ')
         Label(root, text=f'"{ret}"').pack()
         ctr += 1
         print(f'>>> test_get_text: ret: "{ret}"')
