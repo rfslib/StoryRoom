@@ -22,7 +22,7 @@ class Timer_Window(Toplevel):
         # set our size and location
         self.xoffset = self.winfo_screenwidth( )
         self.geometry( f'{cfg.tw_mwidth}x{cfg.tw_mheight}+{self.xoffset}+{cfg.tw_yoffset}')
-
+        self.resizable(False, False)
         self._txt = StringVar()
         self._txt.set('waiting for start')
         self._txt_label = Label(master=self, textvariable=self._txt,
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     from time import sleep
     ctr = 0
     root = Tk()
-    root.geometry('300x100+0+0')
+    root.geometry('300x100+150+150')
     root.title('close me to exit test')
     tst = Timer_Window(root)
     root.mainloop()

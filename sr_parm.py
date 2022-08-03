@@ -11,6 +11,7 @@ from enum import Enum, auto
 
 class Recording_State(Enum):
     INIT = 'Initializing the system'           # program initialization
+    DRIVE_ALREADY = 'There\'s a USB drive mounted. Please remove it to proceed...'
     WAIT_FOR_DRIVE = 'System Ready. Insert a new USB drive to begin...' # ready to record
     DRIVE_INSERTED = 'Drive attached.' # a removable drive has been connected
     GET_FILENAME = 'Enter a name for the video file...'   # get the final filename
@@ -37,16 +38,17 @@ class SR_Parm():
     t_leadin_msg = 'Start recording in {} seconds' # what displays on the monitor (projector) screen
     t_record_msg = 'Recording time remaining: {} minutes'
     t_end_msg = 'Recording time remaining: {} seconds'
+    c_time_left_msg = '{} left'
 
     # timer usage stuff
-    t_drift = 1-(100/3600) # allow time for processing between .after calls; varies per machine
+    t_drift = 1 # for test computer: 1-(100/3600) # allow time for processing between .after calls; varies per machine
     t_leadin_to_start = 20                         # length of the countdown (in seconds)
     t_leadin_warn_at = 20                          # when to set to warning color (in seconds)
     t_leadin_return_at = 1                         # when to call the callback
     t_record_interval = 60                         # how often to update the display (in seconds)
-    t_record_length = 3600                         # one hour of recording = 3600 seconds
-    t_record_warn_at = 120                         # seconds before end of recording to start warning color change
-    t_record_return_at = 60                        # seconds before length to call the callback
+    t_record_length = 120 # 3600                         # one hour of recording = 3600 seconds
+    t_record_warn_at = 90 # 120                         # seconds before end of recording to start warning color change
+    t_record_return_at = 60                        # seconds before record_length to call the callback
     #tw_end_length = recording_return_at
     t_end_interval = 1
     #tw_end_warn_at = recording_return_at

@@ -40,7 +40,7 @@ class get_kb_text(Toplevel):
         
         self.overrideredirect(True) # don't show title 
         self.attributes('-topmost', 1) # stay on top
-        self.geometry('+100+500') ## TODO: make this dynamic: bottom of screen, approx centered
+        self.geometry('+150+300') ## TODO: make this dynamic: bottom of screen, approx centered
         
         self.config(bg = 'Green')    #  add background color 'SystemButtonFace'
 

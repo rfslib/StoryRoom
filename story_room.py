@@ -4,6 +4,9 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
+# TODO: change timer_window message when copy is complete
+# TODO: stop showing USB info when it isn't attached (huh?)
+# TODO: force focus on control_window
 # TODO: all logic needs review after moving countdown stuff from timer_window
 # TODO: prompt to remove drive if already inserted on startup (prompts for name twice as well :p)
 # TODO: USB disconnect (after os.sync)
@@ -23,6 +26,7 @@ control "Story Room" recording sessions
 # TODO: set filename format (SetFilenameFormatting)
 # TODO: QSG (have this app set all parameters so no manual settings are required)
 # TODO: warn on version mismatch for OBS, websockets and simpleobsws
+# DONE: don't show time left during lead-in countdown
 # DONE: detect USB drive, copy file at end of recording
 # DONE: get the desired filename
 # DONE: detect USB drive and available space (NOTE: only one USB port will be physically exposed, so this will be the non-C: drive)
@@ -62,29 +66,30 @@ class Story_Room():
     tw_countdown_return = 0 # non-zero value means exec callback at n seconds
     tw_countdown_string = '{} seconds remaining'
     tw_countdown_abort = False
+    tw_show_cw_timer = True
 
 
     def __init__(self):
         
-        self._debug = True 
+        self._debug = False 
 
-        self.state = Recording_State.INIT
+        self.state = Recording_State.INIT 
         self.usb_drive = ''
         self.output_file_name = ''
 
         self.wm = tk.Tk()
         self.cw = Control_Window(self.wm, self.session_init, self.session_stop, self.debug_exit, debug=self._debug)
+        self.update_state(Recording_State.INIT)
         self.tw = Timer_Window(self.wm)
         self.kb = get_kb_text(self.wm)
-        self.update_state()
         
         self.obs1 = OBS_Xface(host=cfg.obs1_host, port=cfg.obs1_port, password=cfg.obs1_pswd, callback=self.on_obs1_event)
         if cfg.obs2_host != '':
             self.obs2 = OBS_Xface(host=cfg.obs2_host, port=cfg.obs2_port, password=cfg.obs2_pswd, callback=self.on_obs2_event)
         self.update_sys_lines()
 
-        self.session_reset()
-        self.wait_for_drive()
+        self.update_state(Recording_State.DRIVE_ALREADY)
+        self.wait_for_drive_removal()
 
         self.wm.withdraw() # hide the toplevel window
         self.wm.mainloop() # handle window events
@@ -92,7 +97,7 @@ class Story_Room():
     def wait_for_drive(self): # wait for a USB drive to be plugged in to get the session going
         drives = self.get_drives()
         if len(drives) > 0:
-            self.state = Recording_State.DRIVE_INSERTED
+            self.update_state(Recording_State.DRIVE_INSERTED)
             self.usb_drive = drives[0]
             if self._debug: print(f'>>> usb drive is on {self.usb_drive}:')
             self.session_get_filename()
@@ -100,39 +105,39 @@ class Story_Room():
             self.wm.after(1000, self.wait_for_drive)
 
     def session_get_filename(self):
-        self.state = Recording_State.GET_FILENAME
+        self.update_state(Recording_State.GET_FILENAME)
         self.output_file_name = self.kb.get_text('Enter filename: ')
         ### NOTE: if output_file_name is left an empty string, it will use basename in session_end_recording() 
         if self._debug: print(f'>>> session_get_filename: {self.output_file_name}')
-        self.state = Recording_State.WAIT_FOR_START
+        self.update_state(Recording_State.WAIT_FOR_START)
         self.cw.enable_start_button()
 
     def session_init(self):
-        self.state = Recording_State.COUNTDOWN
+        self.update_state(Recording_State.COUNTDOWN)
         self.cw.disable_start_button()
         self.cw.enable_stop_button()
         self.start_countdown(msg_text=cfg.t_leadin_msg, length=cfg.t_leadin_to_start, 
-            upd_every=1, warn_at=cfg.t_leadin_warn_at, return_at=0, callback=self.session_start_recording)
+            upd_every=1, warn_at=cfg.t_leadin_warn_at, return_at=0, show_cw_timer=False, callback=self.session_start_recording)
 
     def session_start_recording( self ):
-        self.state = Recording_State.RECORDING
+        self.update_state(Recording_State.RECORDING)
         self.cw.disable_start_button()
         self.cw.enable_stop_button()
         self.obs1.start_recording()
         self.start_countdown(msg_text=cfg.t_record_msg, length=cfg.t_record_length,
-            upd_every=cfg.t_record_interval, warn_at=cfg.t_record_warn_at, return_at=cfg.t_record_return_at, callback=self.session_end_warn)
+            upd_every=cfg.t_record_interval, warn_at=cfg.t_record_warn_at, return_at=cfg.t_record_return_at, show_cw_timer=True, callback=self.session_end_warn)
 
     def session_end_warn(self):
         self.start_countdown(msg_text=cfg.t_end_msg, length=cfg.t_record_return_at, 
-            upd_every=cfg.t_end_interval, warn_at=cfg.t_record_return_at, return_at=0, callback=self.session_end_recording)
+            upd_every=cfg.t_end_interval, warn_at=cfg.t_record_return_at, return_at=0, show_cw_timer=True, callback=self.session_end_recording)
 
     def session_stop(self): # early stop of recording
         if self._debug: print('aborting')
         if self.state == Recording_State.COUNTDOWN:
-            self.state = Recording_State.ABORTING
-            self.tw.stop_countdown(self.session_reset)
+            self.update_state(Recording_State.ABORTING)
+            self.stop_countdown(self.session_reset)
         elif self.state == Recording_State.RECORDING:
-            self.state = Recording_State.ABORTING
+            self.update_state(Recording_State.ABORTING)
             self.stop_countdown(self.session_end_recording)
 
     def session_end_recording(self): # stop recording and copy to USB, then prompt to remove drive
@@ -149,16 +154,14 @@ class Story_Room():
             self.output_file_name += '.mkv'
         dest_filename = '{}:\\{}'.format(self.usb_drive, self.output_file_name)
         if self._debug: print(f'>>> copying {self.obs1.file_name} to {dest_filename}') 
-        self.tw.set_txt('Copying video to USB')
-        self.state = Recording_State.COPYING
+        self.update_state(Recording_State.COPYING)
         self.tw.set_txt('Copying the video to the USB drive...')
         copy(self.obs1.file_name, dest_filename)
         if self._debug: sleep(5) # lengthen copy time to verify prompts
-        # clear variables, etc. for the next session
-        self.state = Recording_State.DRIVE_READY
+        self.update_state(Recording_State.DRIVE_READY)
         self.wait_for_drive_removal()
 
-    def wait_for_drive_removal(self):
+    def wait_for_drive_removal(self): # wait for the USB drive to be removed
         drives = self.get_drives()
         if len(drives) > 0:
             self.wm.after(1000, self.wait_for_drive_removal)
@@ -166,19 +169,19 @@ class Story_Room():
             self.session_reset()
   
     def session_reset(self): # reset environment for next recording
-        self.state = Recording_State.FINISHING
+        self.update_state(Recording_State.FINISHED)
         if self._debug: print('session_reset')
         self.tw.set_txt(cfg.timer_waiting_message)
         self.cw.disable_stop_button()
         self.cw.disable_start_button()
         self.usb_drive = ''
-        self.state = Recording_State.WAIT_FOR_DRIVE
+        self.update_state(Recording_State.WAIT_FOR_DRIVE)
         self.wait_for_drive() # wait for next USB drive to start next session
 
-    def update_state(self):
+    def update_state(self, state_now: Recording_State):
+        self.state = state_now
         self.cw.set_state_line(self.state.value, cfg.state_font_color)
         self.cw.update()
-        self.wm.after(1000, self.update_state)
 
     def on_obs1_event(self, desc):
         print(f'on_obs1_event: {desc}')
@@ -222,7 +225,7 @@ class Story_Room():
 
 # --- timer stuff
 
-    def start_countdown(self, msg_text:str='countdown: {}', length:int=20, upd_every: int=1, warn_at: int=10, return_at: int=0, callback=None):
+    def start_countdown(self, msg_text:str='countdown: {}', length:int=20, upd_every: int=1, warn_at: int=10, return_at: int=0, show_cw_timer: int=True, callback=None):
         if self.tw_countdown_active: return -1 # a countdown is already active, can't start another
         self.tw_countdown_active = True # set "in-countdown" flag
         if self._debug: print(f'>>> start_countdown: count down {length} seconds, update every {upd_every} seconds')
@@ -234,6 +237,7 @@ class Story_Room():
         self.tw_countdown_return = return_at
         self.tw_countdown_complete = False
         self.tw_countdown_abort = False
+        self.tw_show_cw_timer = show_cw_timer
         self.tw.set_alpha(cfg.tw_normalpha)
         self.tw.set_bg(cfg.tw_normbg)
         self.countdown()  # start the countdown
@@ -260,11 +264,16 @@ class Story_Room():
             if not (self.tw_countdown_seconds % self.tw_countdown_interval): # update at every 'interval'
                 self.tw.set_txt(self.tw_countdown_string.format(int(self.tw_countdown_seconds / self.tw_countdown_interval)))
                 if self._debug: print(f'>>> countdown: at {self.tw_countdown_seconds} seconds')
-                self.cw.set_time_left(int(self.tw_countdown_seconds / 60), cfg.c_text_info_color)
+                if self.tw_show_cw_timer:
+                    if self.tw_countdown_seconds < 60:
+                        self.cw.set_time_left('<1 minute', cfg.c_text_info_color)
+                    else:
+                        self.cw.set_time_left(cfg.c_time_left_msg.format(int(self.tw_countdown_seconds / 60)), cfg.c_text_info_color)
             self.tw_countdown_seconds -= 1
-            self.wm.after(cfg.t_drift * 1000, self.countdown)
+            self.wm.after(int(cfg.t_drift * 1000), self.countdown)
         else: # time is up
             self.tw.set_txt('')
+            self.cw.set_time_left('', cfg.c_text_soft_color)
             if self._debug: print( '>>> countdown: complete')
             self.tw.set_alpha(cfg.tw_normalpha)
             self.tw.set_bg(cfg.tw_normbg)

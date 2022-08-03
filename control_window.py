@@ -27,6 +27,8 @@ class Control_Window(Toplevel):
         self.attributes('-topmost', 1) # stay on top
 
         # get our size and location
+        self.xoffset = self.winfo_screenwidth( )
+        #self.geometry( f'{cfg.tw_mwidth}x{cfg.tw_mheight}+{self.xoffset}+{cfg.tw_yoffset}')
         self.mwidth = self.winfo_screenwidth()
         self.mheight = self.winfo_screenheight()
         self.moffsetx = 0
