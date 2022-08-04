@@ -180,7 +180,7 @@ class Story_Room():
 
     def update_state(self, state_now: Recording_State):
         self.state = state_now
-        self.cw.set_state_line(self.state.value, cfg.state_font_color)
+        self.cw.set_state_line(self.state.value, cfg.c_state_font_color)
         self.cw.update()
 
     def on_obs1_event(self, desc):
@@ -287,7 +287,7 @@ class Story_Room():
     def debug_exit(self, e):
         self.cw.withdraw()     
         self.wm.after_cancel(self.update_state)     
-        self.cw.set_state_line(f'\n>>> debug_exit: initiated with {e}', cfg.state_font_color)
+        self.cw.set_state_line(f'\n>>> debug_exit: initiated with {e}', cfg.c_state_font_color)
         print(f'\n>>> debug_exit: initiated with {e}')
         self.wm.after_cancel(self.update_sys_lines)
         self.tw.destroy()   

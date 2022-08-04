@@ -5,7 +5,7 @@ author: rfslib
 
 from tkinter import *
 
-from sr_parm import SR_Parm as cfg
+from sr_parm import Recording_State, SR_Parm as cfg
 
 free_disk = 0
 
@@ -25,10 +25,8 @@ class Control_Window(Toplevel):
         self.overrideredirect(True) # don't show title 
         self.attributes('-alpha', 1.0) # set transparency
         self.attributes('-topmost', 1) # stay on top
-
         # get our size and location
         self.xoffset = self.winfo_screenwidth( )
-        #self.geometry( f'{cfg.tw_mwidth}x{cfg.tw_mheight}+{self.xoffset}+{cfg.tw_yoffset}')
         self.mwidth = self.winfo_screenwidth()
         self.mheight = self.winfo_screenheight()
         self.moffsetx = 0
@@ -46,15 +44,15 @@ class Control_Window(Toplevel):
         self.ttlframe = Frame( master=self, relief = RIDGE, borderwidth=5, bg=cfg.c_bg_color, padx=cfg.padxy, pady=cfg.padxy )
         self.ttlframe.grid(row=0, column=0, columnspan=3, padx=cfg.padxy, pady=cfg.padxy, sticky='ew')
         self.grid_columnconfigure( 0, weight=1 )
-        self.ttllbl = Label(master=self.ttlframe, text=cfg.timer_waiting_message, font=(cfg.c_bold_font, cfg.fontsize), bg=cfg.c_bg_color, fg=cfg.fontcolor)
+        self.ttllbl = Label(master=self.ttlframe, text=cfg.c_title_text, font=(cfg.c_bold_font, cfg.c_title_fontsize), bg=cfg.c_bg_color, fg=cfg.fontcolor)
         self.ttllbl.pack(padx=cfg.padxy, pady=cfg.padxy)
 
         # the 'state/action' frame
         self.state_frame = Frame(master=self, bg=cfg.c_bg_color, padx=cfg.padxy, pady=cfg.padxy)
         self.state_frame.grid(row=1, column=0, columnspan=3, padx=cfg.padxy, pady=cfg.padxy, sticky='ew')
         self.state_line=StringVar()
-        self.state_label = Label(master=self.state_frame, textvariable=self.state_line, fg=cfg.state_font_color, bg=cfg.c_bg_color,
-                            font=(cfg.c_bold_font, cfg.state_font_size))
+        self.state_label = Label(master=self.state_frame, textvariable=self.state_line, fg=cfg.c_state_font_color, bg=cfg.c_bg_color,
+                            font=(cfg.c_bold_font, cfg.c_state_fontsize))
         self.state_label.grid(row=0, column=0, sticky='w')
         
         # create a frame for interactions (buttons, text entry, etc.)
@@ -73,10 +71,12 @@ class Control_Window(Toplevel):
         self.btn_stop.grid(row=0, column=1, padx=cfg.padxy, pady=cfg.padxy)
         self.disable_stop_button()
 
+        self.time_left_frame = Frame(master=self, bg=cfg.c_bg_color, padx=cfg.padxy, pady=cfg.padxy)
+        self.time_left_frame.grid(row=3, column=0, padx=cfg.padxy, pady=cfg.padxy, sticky='we')
         self._time_left = StringVar()
-        self.time_left = Label(master=self.int_frame, textvariable=self._time_left, anchor='w',
+        self.time_left = Label(master=self.time_left_frame, textvariable=self._time_left, anchor='w',
             fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.c_time_left_fontsize))
-        self.time_left.grid(row=0, column=2, sticky='w')
+        self.time_left.grid(row=0, column=0, sticky='w')
         self.update
 
         # "info" frame
@@ -149,12 +149,24 @@ def test_exit_callback(e):
     tst.destroy()
     root.destroy()
 
+def test_state_line_msg_lengths(e):
+    from time import sleep
+    for state_line in Recording_State:
+        tst.set_state_line(state_line.value, cfg.c_state_font_color)
+        tst.set_time_left(f'{state_line.name}', 'Black')
+        tst.update()
+        sleep(2)
+    tst.set_state_line('All done :)', cfg.c_state_font_color)
+    tst.set_time_left('', 'Black')
+
 if __name__ == '__main__':
+
     root = Tk()
     root.geometry( '300x100+0+0' )
     root.title( 'close me to exit test' )
-    tst = Control_Window(root, None, None, test_exit_callback, debug=True )
-    tst.set_state_line('Stately State', cfg.state_font_color)
+    tst = Control_Window(root, None, None, test_exit_callback, debug=False )
+    tst.bind('<Escape>', test_state_line_msg_lengths)
+    tst.set_state_line('Press <Escape> to show all state messages', cfg.c_state_font_color)
     tst.set_info_line_1(cfg.info_line.format('Main System', 'test', 0), cfg.c_text_soft_color)
     tst.set_info_line_2(cfg.info_line.format('Backup System', 'test', 0), cfg.c_text_soft_color)
     tst.set_info_line_3(cfg.info_line.format('USB', 'test', 0), cfg.c_text_soft_color)
