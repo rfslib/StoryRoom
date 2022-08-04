@@ -98,9 +98,9 @@ class OBS_Xface(obsws):
         if self._debug: print(f'checking if {processName} is running')
         for proc in psutil.process_iter():
             if processName.lower() in proc.name().lower():
-                if debug: print('OBS runneth')
+                if self._debug: print('>>> obs_xface: OBS runneth')
                 return True
-        if self._debug: print('OBS doth NOT run')
+        if self._debug: print('>>> obs_xface: OBS doth NOT run')
         return False
 
     def obs_is_running(self):
