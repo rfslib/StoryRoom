@@ -47,7 +47,7 @@ class SR_Parm():
     t_leadin_warn_at = 20                          # when to set to warning color (in seconds)
     t_leadin_return_at = 1                         # when to call the callback
     t_record_interval = 60                         # how often to update the display (in seconds)
-    t_record_length = 120 # 3600                         # one hour of recording = 3600 seconds
+    t_record_length = 60 # 3600                         # one hour of recording = 3600 seconds
     t_record_warn_at = 90 # 120                         # seconds before end of recording to start warning color change
     t_record_return_at = 60                        # seconds before record_length to call the callback
     #tw_end_length = recording_return_at
@@ -81,8 +81,8 @@ class SR_Parm():
     c_state_fontsize = 16
     c_state_font_color = 'Navy' # 'DarkBlue'
 
-    free_disk_min = 5000.0 # minimum available space on disk before displaying warning
-    fd_delay = 5000  # 60000 to update available disk space once a minute
+    free_disk_min = 3000.0 # minimum available space on disk before displaying warning
+    fd_delay = 5000
 
     # OBS
     obs_processname = 'obs64.exe'
@@ -97,7 +97,7 @@ class SR_Parm():
     obs1_host = '127.0.0.1'
     obs1_port = 4444
     obs1_pswd = 'family'
-    obs2_host = '' #give a host name/ip address to activate second system
+    obs2_host = '192.168.74.74' #give a host name/ip address to activate second system
     obs2_port = 4444
     obs2_pswd = 'family'
 

@@ -65,7 +65,8 @@ class OBS_Xface(obsws):
         if self._debug: print('\n>>> unregister on_obs_event')
         self.unregister(self.event_handle)
         if self._debug: print('\n>>> disconnect websockets')
-        self.loop.run_until_complete(self.disconnect())
+        try: self.loop.run_until_complete(self.disconnect())
+        except (RuntimeWarning, RuntimeError): print('>>> ignoring the gub')
         if self._debug: print('\n>>> close loop')
         self.loop.close()
 
