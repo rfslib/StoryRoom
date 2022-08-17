@@ -40,6 +40,10 @@ class SR_Parm():
     t_record_msg = 'Recording time remaining: {} minutes'
     t_end_msg = 'Recording time remaining: {} seconds'
     c_time_left_msg = '{} minutes left'
+    c_main_system_name = 'Main System'
+    c_backup_system_name = 'Backup System'
+    c_backup_unavailable_msg = 'Backup system is not available'
+    c_usb_remove_msg = 'Please remove the USB drive'
 
     # timer usage stuff
     t_drift = 1 # for test computer: 1-(100/3600) # allow time for processing between .after calls; varies per machine
@@ -82,7 +86,9 @@ class SR_Parm():
     c_state_font_color = 'Navy' # 'DarkBlue'
 
     free_disk_min = 3000.0 # minimum available space on disk before displaying warning
-    fd_delay = 5000
+    update_obs_status_delay = 5000
+    update_usb_status_delay = 1000
+    ##fd_delay = 2500 # time between updates to OBS and USB status lines
 
     # OBS
     obs_processname = 'obs64.exe'
