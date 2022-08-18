@@ -59,17 +59,27 @@ class Control_Window(Toplevel):
         self.int_frame = Frame(master=self, bg=cfg.c_bg_color, padx=cfg.padxy, pady=cfg.padxy)
         self.int_frame.grid(row=2, column=0, padx=cfg.padxy, pady=cfg.padxy, sticky='ewn')
         
-        self.btn_start= Button(self.int_frame, height=cfg.c_btn_height, relief=GROOVE, bg=cfg.c_btn_bg_color,
+        self.btn_start = Button(self.int_frame, height=cfg.c_btn_height, relief=GROOVE, bg=cfg.c_btn_bg_color,
             text=cfg.start_btn_txt, font=(cfg.c_bold_font, cfg.c_btn_fontsize),
             command=self.start_callback)
-        self.btn_start.grid(row=0, column=0, padx=cfg.padxy, pady=cfg.padxy)
+        self.btn_start.grid(row=0, column=0, rowspan=2, padx=cfg.padxy, pady=cfg.padxy)
         self.disable_start_button()
         
         self.btn_stop= Button(self.int_frame, height=cfg.c_btn_height, relief=GROOVE, bg=cfg.c_btn_bg_color,
             text=cfg.stop_btn_txt, font=(cfg.c_bold_font, cfg.c_btn_fontsize),
             command=self.stop_callback)
-        self.btn_stop.grid(row=0, column=1, padx=cfg.padxy, pady=cfg.padxy)
+        self.btn_stop.grid(row=0, column=1, rowspan=2, padx=cfg.padxy, pady=cfg.padxy)
         self.disable_stop_button()
+
+        self.event_text_1 = StringVar()
+        self.events_1 = Label(master=self.int_frame, textvariable=self.event_text_1, anchor='w',
+            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.info_fontsize))
+        self.events_1.grid(row=0, column=2, padx=cfg.padxy, pady=cfg.padxy)
+
+        self.event_text_2 = StringVar()
+        self.events_2 = Label(master=self.int_frame, textvariable=self.event_text_2, anchor='w',
+            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.info_fontsize))
+        self.events_2.grid(row=1, column=2, padx=cfg.padxy, pady=cfg.padxy)
 
         self.time_left_frame = Frame(master=self, bg=cfg.c_bg_color, padx=cfg.padxy, pady=cfg.padxy)
         self.time_left_frame.grid(row=3, column=0, padx=cfg.padxy, pady=cfg.padxy, sticky='we')
@@ -124,6 +134,14 @@ class Control_Window(Toplevel):
     def set_state_line(self, textin, text_color):
         self.state_label.config(fg=text_color)
         self.state_line.set(str(textin))
+
+    def set_event_line_1(self, textin, text_color=cfg.c_text_info_color):
+        self.events_1.config(fg=text_color)
+        self.event_text_1.set(str(textin))
+    
+    def set_event_line_2(self, textin, text_color=cfg.c_text_info_color):
+        self.events_2.config(fg=text_color)
+        self.event_text_2.set(str(textin))
     
     def set_info_line_1(self, textin, text_color):
         self.info_label_1.config(fg=text_color)

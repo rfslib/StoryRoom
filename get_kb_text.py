@@ -39,7 +39,7 @@ class get_kb_text(Toplevel):
         self.style.configure('TButton', font=('Consolas Bold', 14))
         
         self.overrideredirect(True) # don't show title 
-        self.attributes('-topmost', 1) # stay on top
+        self.attributes('-topmost', True) # stay on top
         self.geometry('+150+300') ## TODO: make this dynamic: bottom of screen, approx centered
         
         self.config(bg = 'Green')    #  add background color 'SystemButtonFace'
@@ -112,6 +112,13 @@ class get_kb_text(Toplevel):
 
         self.update()
         self.resizable(False, False)
+        self._keep_focus_active = None
+
+    def __del__(self):
+        self.text.set('') # force a wait_variable to continue? is this a good idea?
+        if self._keep_focus_active != None:
+            self.after_cancel(self._keep_focus_active)
+        #self.destroy()
 
     def _key_press(self, num):
         self.text_entry.set(self.text_entry.get() + str(num))
@@ -128,13 +135,20 @@ class get_kb_text(Toplevel):
     def _process_enter(self):
         self.text.set(self.text_entry.get())
 
+    def _keep_focus(self): # don't allow this to lose focus if waiting for input :p
+        self.focus_force()
+        self._keep_focus_active = self.after(500, self._keep_focus)
+
     # note that this waits for a changed to text_entry (wait_variable), which is done by _process_enter
     def get_text(self, prompt): # the public method to get some text
         self.text_prompt.set(prompt)
         self.text_entry.set('')
         self.deiconify()
         self.focus_force()
+        self._keep_focus()
         self.wait_variable(self.text)
+        self.after_cancel(self._keep_focus_active)
+        self._keep_focus_active = None
         self.withdraw()
         return self.text.get()
 
@@ -153,7 +167,6 @@ def test_get_text(data):
     root.destroy()
 
 if __name__ == '__main__':
-    from time import sleep
     root = Tk()
     root.bind('<Escape>', test_get_text)
     Label(root, text='\n press ESC to continue \n').pack()

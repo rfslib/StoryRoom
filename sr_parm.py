@@ -47,7 +47,7 @@ class SR_Parm():
 
     # timer usage stuff
     t_drift = 1 # for test computer: 1-(100/3600) # allow time for processing between .after calls; varies per machine
-    t_leadin_to_start = 10 # 20                         # length of the countdown (in seconds)
+    t_leadin_to_start = 5 # 20                         # length of the countdown (in seconds)
     t_leadin_warn_at = 20                          # when to set to warning color (in seconds)
     t_leadin_return_at = 1                         # when to call the callback
     t_record_interval = 60                         # how often to update the display (in seconds)
