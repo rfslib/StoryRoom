@@ -26,6 +26,9 @@ class get_kb_text(Toplevel):
         self.text_prompt = StringVar()  # changeable prompt
         self.text_entry = StringVar()   # where the text string is built
 
+        self.prompt = 'enter something:'
+        self.maxlength = 48             # max number of characters in input string
+
         self.ixpad = 3 # was 6
         self.iypad = 5 # was 10
         self.xpad = 1
@@ -120,8 +123,11 @@ class get_kb_text(Toplevel):
             self.after_cancel(self._keep_focus_active)
         #self.destroy()
 
-    def _key_press(self, num):
-        self.text_entry.set(self.text_entry.get() + str(num))
+    def _key_press(self, char):
+        if len(self.text_entry.get()) < self.maxlength:
+            self.text_entry.set(self.text_entry.get() + str(char))
+        else:
+            pass # TODO: warn user
 
     # the 'clear' button resets the entry string to an empty string
     def _clear_value(self):
@@ -139,10 +145,15 @@ class get_kb_text(Toplevel):
         self.focus_force()
         self._keep_focus_active = self.after(500, self._keep_focus)
 
+    def _update_prompt(self):
+        TODO
+
     # note that this waits for a changed to text_entry (wait_variable), which is done by _process_enter
-    def get_text(self, prompt): # the public method to get some text
-        self.text_prompt.set(prompt)
+    def get_text(self, prompt, maxlength=48): # the public method to get some text
+        self.prompt = prompt
+        self.text_prompt.set(self.prompt)
         self.text_entry.set('')
+        self.maxlength = maxlength
         self.deiconify()
         self.focus_force()
         self._keep_focus()
@@ -159,7 +170,7 @@ def test_get_text(data):
     ret = '.'
     ctr = 1
     while ret != '':
-        ret = gf.get_text(f'Empty string to end({ctr}): ')
+        ret = gf.get_text(f'Empty string to end({ctr}): ', ctr)
         Label(root, text=f'"{ret}"').pack()
         ctr += 1
         print(f'>>> test_get_text: ret: "{ret}"')

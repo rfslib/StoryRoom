@@ -42,7 +42,6 @@ control "Story Room" recording sessions
 version = '20220818'
 
 import tkinter as tk
-#import psutil
 from psutil import disk_partitions
 from psutil import disk_usage
 
@@ -56,6 +55,7 @@ from control_window import Control_Window
 from timer_window import Timer_Window
 from obs_xface import OBS_Xface, OBS_Error
 from get_kb_text import get_kb_text
+from popup import popup_window
 
 class Story_Room():
 
@@ -93,6 +93,9 @@ class Story_Room():
         # set up the keyboard entry window (for getting a filename)
         self.kb = get_kb_text(self.wm)
 
+        # set up the oops message window, which we hope to never use
+        self.ow = popup_window(self.wm)
+
         # open a channel (websocket) to OBS on this system and on a remote backup system
         self.obs1 = OBS_Xface(host=cfg.obs1_host, port=cfg.obs1_port, password=cfg.obs1_pswd, callback=self.on_obs1_event)
         if self._debug: print(f'>>> obs1 configured: {self.obs1}')
@@ -108,16 +111,14 @@ class Story_Room():
         self.obs_status_updater = None # holds the update method 'after' call so it can be stopped on exit
         self.update_obs_status() # start the updater, which keeps itself going with an 'after' call
 
-        # start the USB status updater
-        self.usb_status_updater = None # a place to hold the USB status line update method 'after' call so it can be stopped on exit
-        self.set_usb_drive() # set the current
-        self.update_usb_drive_status() # start the status updater, which keeps itself going with and 'after' call
-
-        if self._debug: print(f'>>> init: drive: "{self.usb_drive}"')
+        # USB prep
+        self.set_usb_drive() # set the current USB drive letter and state
         if self.usb_drive != '':
             self.update_state(Recording_State.DRIVE_ALREADY)
             self.eject_drive()
         self.wait_for_drive_removal() # starts the process
+        self.usb_status_updater = None # a place to hold the USB status line update method 'after' call so it can be stopped on exit
+        self.update_usb_drive_status() # start the status updater, which keeps itself going with an 'after' call
         
         self.wm.mainloop() # handle window events
 ### --- end of init
@@ -182,6 +183,9 @@ class Story_Room():
                 print('>>> obs2 has stopped responding: can\'t stop recording')
                 self.obs2 = None
         self.tw.set_txt('Recording Stopped')
+        self.session_copy_recording()
+
+    def session_copy_recording(self):
         # build the output filename and copy
         if self.output_file_name == '': # if no file name given, use default from OBS
             self.output_file_name = basename(self.obs1.file_name) # default name is date/time
@@ -191,11 +195,21 @@ class Story_Room():
         if self._debug: print(f'>>> copying {self.obs1.file_name} to {dest_filename}') 
         self.update_state(Recording_State.COPYING)
         self.tw.set_txt('Copying the video to the USB drive...')
-        copy(self.obs1.file_name, dest_filename)
+        try:
+            copy(self.obs1.file_name, dest_filename)
+        except:
+            self.state = Recording_State.COPY_FAILED
+            self.session_copy_fail()
         self.eject_drive()
         self.update_state(Recording_State.DRIVE_READY)
         self.wait_for_drive_removal()
-  
+
+    def session_copy_fail(self):
+        self.ow.wait_for_ack('Copy to USB failed. See the manual for the Video Recovery Procedure')
+        self.eject_drive()
+        self.update_state(Recording_State.DRIVE_READY)
+        self.wait_for_drive_removal()
+
     def session_reset(self): # reset environment for next recording
         self.update_state(Recording_State.FINISHED)
         if self._debug: print('session_reset')
@@ -256,19 +270,29 @@ class Story_Room():
             self.wm.after(1000, self.wait_for_drive)
 
     def update_usb_drive_status(self):
-        # update ubs drive status if present
-        text_color=cfg.c_text_info_color
+        # check if USB drive is still mounted, and update status
+        # --> if a drive should already be mounted (i.e., we're not in WAIT_FOR_DRIVE state) the prompt for it to be (re)inserted
+        text_color = cfg.c_text_info_color
+        status_msg = ''
         if self.usb_drive != '':
             if self.usb_drive_mounted:
                 try:
-                    usb_free_disk = disk_usage('{}:\\'.format(self.usb_drive)).free / 1024 / 1024 / 1024                
-                    self.cw.set_info_line_3(cfg.info_line.format('USB Drive', 'available', usb_free_disk), text_color)
+                    usb_free_disk = disk_usage('{}:\\'.format(self.usb_drive)).free / 1024 / 1024 / 1024
+                    status_msg = cfg.c_usb_info_line.format('ready', usb_free_disk)
                 except:
-                    self.cw.set_info_line_3('Could not read USB drive', text_color)
+                    status_msg = 'Could not read USB drive. Please re-insert it!'
+                    text_color = cfg.c_text_warn_color
             else:
-                self.cw.set_info_line_3(cfg.c_usb_remove_msg, text_color)
+                status_msg = cfg.c_usb_remove_msg
+                text_color = cfg.c_text_info_color
         else:
-            self.cw.set_info_line_3('', text_color)
+            if self.state == Recording_State.WAIT_FOR_DRIVE:
+                status_msg = 'Waiting for USB drive'
+            else:
+                status_msg = 'USB drive must be re-inserted!'
+                text_color = cfg.c_text_warn_color
+        # display the message
+        self.cw.set_info_line_3(f'{cfg.c_usb_status_hdr}: {status_msg}', text_color)
         # re-run ourself in a few seconds
         self.usb_status_updater = self.wm.after(cfg.update_usb_status_delay, self.update_usb_drive_status) 
 ### --- end usb drive stuff
@@ -289,7 +313,6 @@ class Story_Room():
         self.cw.set_event_line_2('obs 2: {}'.format(desc['update-type']))
 
     def update_obs_status(self):
-        if self._debug: print('>>> update_obs_status: ')
         # update main recording system status
         self.obs1.get_obs_stats()
         if self.obs1.disk_space < cfg.free_disk_min:

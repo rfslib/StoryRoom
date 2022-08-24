@@ -60,25 +60,25 @@ class Control_Window(Toplevel):
         self.int_frame.grid(row=2, column=0, padx=cfg.padxy, pady=cfg.padxy, sticky='ewn')
         
         self.btn_start = Button(self.int_frame, height=cfg.c_btn_height, relief=GROOVE, bg=cfg.c_btn_bg_color,
-            text=cfg.start_btn_txt, font=(cfg.c_bold_font, cfg.c_btn_fontsize),
+            text=cfg.start_btn_txt, fg=cfg.c_btn_idle_color, font=(cfg.c_bold_font, cfg.c_btn_fontsize),
             command=self.start_callback)
         self.btn_start.grid(row=0, column=0, rowspan=2, padx=cfg.padxy, pady=cfg.padxy)
         self.disable_start_button()
         
         self.btn_stop= Button(self.int_frame, height=cfg.c_btn_height, relief=GROOVE, bg=cfg.c_btn_bg_color,
-            text=cfg.stop_btn_txt, font=(cfg.c_bold_font, cfg.c_btn_fontsize),
+            text=cfg.stop_btn_txt, fg=cfg.c_btn_idle_color, font=(cfg.c_bold_font, cfg.c_btn_fontsize),
             command=self.stop_callback)
         self.btn_stop.grid(row=0, column=1, rowspan=2, padx=cfg.padxy, pady=cfg.padxy)
         self.disable_stop_button()
 
         self.event_text_1 = StringVar()
         self.events_1 = Label(master=self.int_frame, textvariable=self.event_text_1, anchor='w',
-            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.info_fontsize))
+            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.c_info_fontsize))
         self.events_1.grid(row=0, column=2, padx=cfg.padxy, pady=cfg.padxy)
 
         self.event_text_2 = StringVar()
         self.events_2 = Label(master=self.int_frame, textvariable=self.event_text_2, anchor='w',
-            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.info_fontsize))
+            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.c_info_fontsize))
         self.events_2.grid(row=1, column=2, padx=cfg.padxy, pady=cfg.padxy)
 
         self.time_left_frame = Frame(master=self, bg=cfg.c_bg_color, padx=cfg.padxy, pady=cfg.padxy)
@@ -95,23 +95,23 @@ class Control_Window(Toplevel):
 
         self.info_line_1 = StringVar()
         self.info_label_1 = Label(master=self.info_frame, textvariable=self.info_line_1, anchor='e',
-            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.info_fontsize))
+            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.c_info_fontsize))
         self.info_label_1.grid(row=0, column=0, sticky='e')
 
         self.info_line_2 = StringVar()
         self.info_label_2 = Label(master=self.info_frame, textvariable=self.info_line_2, anchor='e', 
-            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.info_fontsize))
+            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.c_info_fontsize))
         self.info_label_2.grid(row=1, column=0, sticky='e')
 
         self.info_line_3 = StringVar()
         self.info_label_3 = Label(master=self.info_frame, textvariable=self.info_line_3, anchor='e', 
-            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.info_fontsize))
+            fg=cfg.info_fontcolor, bg=cfg.c_bg_color, font=(cfg.c_text_font, cfg.c_info_fontsize))
         self.info_label_3.grid(row=2, column=0, sticky='e')
 
         self.update()      
         if self._debug: print('control window ready')
 
-        self.bind('<Control-Alt-F4>', self.exit_callback)
+        self.bind('<Control-Alt-F12>', self.exit_callback)
 
 # ----
 

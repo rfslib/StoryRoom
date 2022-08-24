@@ -22,6 +22,7 @@ class Recording_State(Enum):
     FINISHING = 'Stopping the Recording.'     # recording stop has been requested
     FINISHED = 'Recording has stopped. Re-muxing the file and preparing to copy to the USB drive.'       # recording has stopped (reMUX in progress)
     COPYING = 'Copying the video file to the USB drive. Please wait...'        # video file is being copied to removable drive
+    COPY_FAILED = 'Copy to USB drive failed. See the recovery procedure in the usage guide.'
     DRIVE_READY = 'Copy to the USB drive is complete. Please remove the drive now...'    # copy is complete, waiting for drive to be removed
     DRIVE_REMOVED = 'USB Drive removed. Bringing out the janitorial supplies.'  # drive removed
     CLEANUP = 'Recording session is over. Preparing the system for the next session.'        # cleanup in progress: extra files being removed, session being reset
@@ -44,6 +45,8 @@ class SR_Parm():
     c_backup_system_name = 'Backup System'
     c_backup_unavailable_msg = 'Backup system is not available'
     c_usb_remove_msg = 'Please remove the USB drive'
+    c_usb_status_hdr = 'USB Drive'
+    c_usb_info_line = 'Status: {}, Available disk space: {:.1f}G'
 
     # timer usage stuff
     t_drift = 1 # for test computer: 1-(100/3600) # allow time for processing between .after calls; varies per machine
@@ -60,7 +63,7 @@ class SR_Parm():
 
     # control_window
     c_title_fontsize = 36
-    c_bg_color = 'LightGreen' # 'SystemButtonFace'
+    c_bg_color = 'antique white' #'LightGreen' # 'SystemButtonFace'
     c_bg_alpha = 0.95
     c_text_info_color = 'Black'
     c_text_warn_color = 'Red'
@@ -71,16 +74,16 @@ class SR_Parm():
     c_italic_font = 'Consolas Italic'
     c_btn_height = 4
     c_btn_fontsize = 24
-    c_btn_idle_color = 'Grey'
+    c_btn_idle_color = 'linen' # 'LightGrey'
     c_btn_active_color = 'Red'
-    c_btn_bg_color = 'SystemButtonFace'
+    c_btn_bg_color = 'misty rose' #'SystemButtonFace'
     c_time_left_fontsize = 84
 
     #font = 'Lucida Console'    # primary font for text
                   # font size
     fontcolor = '#100010'
-    padxy = 4                   # padding inside of frames
-    info_fontsize = 10
+    padxy = 2                   # padding inside of frames
+    c_info_fontsize = 16
     info_fontcolor = 'grey'
     c_state_fontsize = 16
     c_state_font_color = 'Navy' # 'DarkBlue'
@@ -125,6 +128,15 @@ class SR_Parm():
     tw_warnalpha = 0.9
     tw_padxy = 4                   # padding inside of frames
     tw_btn_fontsize = 12
+
+    # oops window
+    o_bg_color = 'SkyBlue1'
+    o_fg_color = 'Black'
+    o_text_font = 'Lucida Console Bold'
+    o_text_fontsize = 13
+    o_btn_font = 'Lucida Console'
+    o_btn_fontsize = 24
+    o_btn_height = 2
 
     # expected (tested) versions
     expected_obs_version = '27.2.4'
