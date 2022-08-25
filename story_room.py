@@ -59,7 +59,7 @@ from popup import popup_window
 
 class Story_Room():
 
-    _debug = False
+    _debug = True
 
     state = Recording_State.INIT 
     usb_drive = ''
@@ -78,10 +78,10 @@ class Story_Room():
     tw_show_cw_timer = True
 
     def __init__(self):
-        
         self.wm = tk.Tk() # the toplevel Tk window (not shown)
         self.wm.withdraw() # hide the toplevel window
 
+        self.usb_drive = tk.StringVar()
         
         # set up the control screen
         self.cw = Control_Window(self.wm, self.session_init, self.session_stop, self.debug_exit, debug=self._debug)
@@ -112,21 +112,19 @@ class Story_Room():
         self.update_obs_status() # start the updater, which keeps itself going with an 'after' call
 
         # USB prep
+        self.usb_status_updater = None # a place to hold the USB status line update method 'after' call so it can be stopped on exit
         self.set_usb_drive() # set the current USB drive letter and state
-        if self.usb_drive != '':
+        self.update_usb_drive_status() # start the status updater, which keeps itself going with an 'after' call
+        if self.usb_drive.get() != '':
             self.update_state(Recording_State.DRIVE_ALREADY)
             self.eject_drive()
-        self.wait_for_drive_removal() # starts the process
-        self.usb_status_updater = None # a place to hold the USB status line update method 'after' call so it can be stopped on exit
-        self.update_usb_drive_status() # start the status updater, which keeps itself going with an 'after' call
+        self.wait_for_drive_removal() # starts everything
         
         self.wm.mainloop() # handle window events
 ### --- end of init
 
 
 ### --- start of session control stuff
-
-
     def session_get_filename(self):
         self.update_state(Recording_State.GET_FILENAME)
         self.output_file_name = self.kb.get_text('Enter filename: ')
@@ -191,7 +189,7 @@ class Story_Room():
             self.output_file_name = basename(self.obs1.file_name) # default name is date/time
         else:
             self.output_file_name += '_' + basename(self.obs1.file_name) # add date/time to chosen name to avoid conflicts (multi-session recordings)
-        dest_filename = '{}:\\{}'.format(self.usb_drive, self.output_file_name) # prepend the USB drive letter
+        dest_filename = '{}:\\{}'.format(self.usb_drive.get(), self.output_file_name) # prepend the USB drive letter
         if self._debug: print(f'>>> copying {self.obs1.file_name} to {dest_filename}') 
         self.update_state(Recording_State.COPYING)
         self.tw.set_txt('Copying the video to the USB drive...')
@@ -206,8 +204,8 @@ class Story_Room():
 
     def session_copy_fail(self):
         self.ow.wait_for_ack('Copy to USB failed. See the manual for the Video Recovery Procedure')
-        self.eject_drive()
         self.update_state(Recording_State.DRIVE_READY)
+        self.eject_drive()
         self.wait_for_drive_removal()
 
     def session_reset(self): # reset environment for next recording
@@ -216,11 +214,18 @@ class Story_Room():
         self.tw.set_txt(cfg.timer_waiting_message)
         self.cw.disable_stop_button()
         self.cw.disable_start_button()
-        self.usb_drive = ''
+        self.usb_drive.set('')
         self.cw.set_event_line_1('')
         self.cw.set_event_line_2('')
         self.update_state(Recording_State.WAIT_FOR_DRIVE)
-        self.wait_for_drive() # wait for next USB drive to start next session
+        # ---
+        self.set_usb_drive() # set the current USB drive letter and state
+        if self.usb_drive.get() != '':
+            self.update_state(Recording_State.DRIVE_ALREADY)
+            self.eject_drive()
+            self.wait_for_drive_removal()
+        else:
+            self.wait_for_drive() # wait for next USB drive to start next session
 ### --- end of session control stuff
 
 ### --- start of usb drive stuff
@@ -229,42 +234,42 @@ class Story_Room():
         #       when the drive is 'ejected' but not removed, it maintains the drive letter, but fstype is an empty string and opts contains just 'removable'
         #       when the drive is removed, it no longer has an entry in disk_partitions()
         self.usb_drive_mounted = False
-        self.usb_drive = ''
+        self.usb_drive.set('')
         disk_info = disk_partitions()
         for drive in disk_info:
             if 'removable' in drive.opts.lower():
-                self.usb_drive = drive.mountpoint[0] # get just the letter
+                self.usb_drive.set(drive.mountpoint[0]) # get just the letter
                 if drive.fstype != '':
                     self.usb_drive_mounted = True
                 if self._debug: print(f'>>> set_usb_drive: {drive.mountpoint} {drive.opts:16s} {drive.fstype:8s}')
                 break
 
     def eject_drive(self):
-        if self._debug: print(f'>>> eject_drive "{self.usb_drive}"')
+        if self._debug: print(f'>>> eject_drive "{self.usb_drive.get()}"')
         self.set_usb_drive()
-        if self.usb_drive != '':
+        if self.usb_drive.get() != '':
             if self.usb_drive_mounted == True:
                 # the following line from https://stackoverflow.com/questions/70051578/eject-deivce-usb-using-python-3-windows-10/
                 self.usb_drive_mounted = False # assume that the eject will actually work
-                eject_line = f'powershell $driveEject = New-Object -comObject Shell.Application; $driveEject.Namespace(17).parseName("""{self.usb_drive}:""").InvokeVerb("""Eject""")'
+                eject_line = f'powershell $driveEject = New-Object -comObject Shell.Application; $driveEject.Namespace(17).parseName("""{self.usb_drive.get()}:""").InvokeVerb("""Eject""")'
                 if self._debug: print(f'>>> sending {eject_line}')
                 system(eject_line) # 'eject' the usb drive
-                if self._debug: print(f'>>> eject statement executed: usb_drive: {self.usb_drive}, mounted: {self.usb_drive_mounted}')
+                if self._debug: print(f'>>> eject statement executed: usb_drive: {self.usb_drive.get()}, mounted: {self.usb_drive_mounted}')
                 self.wm.after(1000, self.eject_drive)
 
     def wait_for_drive_removal(self): # wait for the USB drive to be removed
         if self._debug: print('>>> wait_for_drive_removal')
         self.set_usb_drive()
-        if self.usb_drive != '':
+        if self.usb_drive.get() != '':
             self.wm.after(1000, self.wait_for_drive_removal)
         else:
             self.session_reset()
 
     def wait_for_drive(self): # wait for a USB drive to be plugged in to get the session going
         self.set_usb_drive()
-        if self.usb_drive != '' and self.usb_drive_mounted == True:
+        if self.usb_drive.get() != '' and self.usb_drive_mounted == True:
             self.update_state(Recording_State.DRIVE_INSERTED)
-            if self._debug: print(f'>>> usb drive is on {self.usb_drive}:')
+            if self._debug: print(f'>>> usb drive is on {self.usb_drive.get()}:')
             self.session_get_filename()
         else:
             self.wm.after(1000, self.wait_for_drive)
@@ -274,10 +279,10 @@ class Story_Room():
         # --> if a drive should already be mounted (i.e., we're not in WAIT_FOR_DRIVE state) the prompt for it to be (re)inserted
         text_color = cfg.c_text_info_color
         status_msg = ''
-        if self.usb_drive != '':
+        if self.usb_drive.get() != '':
             if self.usb_drive_mounted:
                 try:
-                    usb_free_disk = disk_usage('{}:\\'.format(self.usb_drive)).free / 1024 / 1024 / 1024
+                    usb_free_disk = disk_usage('{}:\\'.format(self.usb_drive.get())).free / 1024 / 1024 / 1024
                     status_msg = cfg.c_usb_info_line.format('ready', usb_free_disk)
                 except:
                     status_msg = 'Could not read USB drive. Please re-insert it!'
@@ -444,7 +449,7 @@ if __name__ == '__main__':
         while True:
             # if we're trying to start a new session and there's a usb drive in, get it removed
             self.set_usb_drive() # set the current
-            if self.usb_drive != '':
+            if self.usb_drive.get() != '':
                 self.update_state(Recording_State.DRIVE_ALREADY)
                 self.eject_drive()
             self.action_complete.set(False)
@@ -495,14 +500,14 @@ if __name__ == '__main__':
         ## end while True
 
     def session_wait_for_drive_removal(self): # loop until the usb drive is pulled
-        if self.usb_drive != '':
+        if self.usb_drive.get() != '':
             self.wm.after(1000, self.session_wait_for_drive_removal)
         else:
             self.action_complete.set(True)
 
     def session_wait_for_drive(self): # wait for a USB drive to be plugged in to get the session going
         self.set_usb_drive()
-        if self.usb_drive != '' and self.usb_drive_mounted == True:
+        if self.usb_drive.get() != '' and self.usb_drive_mounted == True:
             self.action_complete.set(True)
         else:
             self.wm.after(1000, self.session_wait_for_drive)

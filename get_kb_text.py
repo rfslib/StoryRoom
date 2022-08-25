@@ -128,14 +128,17 @@ class get_kb_text(Toplevel):
             self.text_entry.set(self.text_entry.get() + str(char))
         else:
             pass # TODO: warn user
+        self._update_prompt()
 
     # the 'clear' button resets the entry string to an empty string
     def _clear_value(self):
         self.text_entry.set('')
+        self._update_prompt()
 
     # backspace: remove the last character of the entry
     def _process_backspace(self):
         self.text_entry.set(self.text_entry.get()[:-1]) # no exception even when string is empty :p
+        self._update_prompt()
 
     # Enter ('Return') Button sets self.text, which triggers the wait_variable in get_text()
     def _process_enter(self):
@@ -146,14 +149,14 @@ class get_kb_text(Toplevel):
         self._keep_focus_active = self.after(500, self._keep_focus)
 
     def _update_prompt(self):
-        TODO
+        self.text_prompt.set('{} ({}/{})'.format(self.prompt, len(self.text_entry.get()), self.maxlength))
 
-    # note that this waits for a changed to text_entry (wait_variable), which is done by _process_enter
-    def get_text(self, prompt, maxlength=48): # the public method to get some text
+    # note that this waits for a change to text_entry, which is done by _process_enter
+    def get_text(self, prompt: str, maxlength: int = 48) -> str: # the public method to get some text
         self.prompt = prompt
-        self.text_prompt.set(self.prompt)
         self.text_entry.set('')
         self.maxlength = maxlength
+        self._update_prompt()
         self.deiconify()
         self.focus_force()
         self._keep_focus()
