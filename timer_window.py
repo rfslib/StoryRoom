@@ -5,9 +5,9 @@ author: rfslib
 
 from tkinter import *
 
-from sr_parm import SR_Parm as cfg
+from story_room_config import StoryRoomConfiguration as cfg
 
-class Timer_Window(Toplevel):
+class TimerWindow(Toplevel):
     debug = False
 
     def __init__(self, master):
@@ -54,5 +54,5 @@ if __name__ == '__main__':
     root = Tk()
     root.geometry('300x100+150+150')
     root.title('close me to exit test')
-    tst = Timer_Window(root)
+    tst = TimerWindow(root)
     root.mainloop()

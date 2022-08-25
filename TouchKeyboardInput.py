@@ -11,16 +11,15 @@ for font style changes see https://www.pythontutorial.net/tkinter/ttk-style/
 
 from tkinter import *
 from tkinter import ttk
-from tkinter import font
 
-class get_kb_text(Toplevel):
+class TouchKeyboardInput(Toplevel):
 
     debug = False
 
     def __init__(self, master): # Create the keyboard window, then hide (withdraw) it
         Toplevel.__init__(self, master)
 
-        self.withdraw() # hide already so it doesn't flash while being build
+        self.withdraw() # hide already so it doesn't flash while being built
         
         self.text = StringVar()         # update this to force exit
         self.text_prompt = StringVar()  # changeable prompt
@@ -30,20 +29,20 @@ class get_kb_text(Toplevel):
         self.maxlength = 48             # max number of characters in input string
 
         self.ixpad = 3 # was 6
-        self.iypad = 5 # was 10
+        self.iypad = 10 # was 10
         self.xpad = 1
-        self.ypad = 1
+        self.ypad = 2
         self.key_width = 4
         paddings = {'ipadx': self.ixpad, 'ipady': self.iypad, 'padx': self.xpad, 'pady': self.ypad}
-        entry_font = {'font': ('Consolas Bold', 14)}
+        entry_font = {'font': ('Consolas Bold', 16)}
         self.style = ttk.Style(self)
         #self.style.configure('TEntry', font=('Consolas Bold', 11))
-        self.style.configure('TLabel', font=('Consolas', 10))
-        self.style.configure('TButton', font=('Consolas Bold', 14))
+        self.style.configure('TLabel', font=('Consolas', 12))
+        self.style.configure('TButton', font=('Consolas Bold', 16))
         
         self.overrideredirect(True) # don't show title 
         self.attributes('-topmost', True) # stay on top
-        self.geometry('+150+300') ## TODO: make this dynamic: bottom of screen, approx centered
+        self.geometry('+50+200') ## TODO: make this dynamic: bottom of screen, approx centered
         
         self.config(bg = 'Green')    #  add background color 'SystemButtonFace'
 
@@ -173,7 +172,7 @@ def test_get_text(data):
     ret = '.'
     ctr = 1
     while ret != '':
-        ret = gf.get_text(f'Empty string to end({ctr}): ', ctr)
+        ret = gf.get_text(f'Filename({ctr}): ', ctr)
         Label(root, text=f'"{ret}"').pack()
         ctr += 1
         print(f'>>> test_get_text: ret: "{ret}"')
@@ -185,7 +184,7 @@ if __name__ == '__main__':
     root.bind('<Escape>', test_get_text)
     Label(root, text='\n press ESC to continue \n').pack()
     root.update()
-    gf = get_kb_text(root)
+    gf = TouchKeyboardInput(root)
     print(f'>>> Get_Filename object: {gf}')
     root.focus_force()
     root.mainloop()

@@ -9,7 +9,7 @@ A class for the current program state
 '''
 from enum import Enum # , auto
 
-class Recording_State(Enum):
+class RecordingState(Enum):
     INIT = 'Initializing the system'           # program initialization
     DRIVE_ALREADY = 'There\'s a USB drive mounted. Please remove it to proceed...'
     WAIT_FOR_DRIVE = 'System Ready. Insert a new USB drive to begin...' # ready to record
@@ -28,7 +28,7 @@ class Recording_State(Enum):
     CLEANUP = 'Recording session is over. Preparing the system for the next session.'        # cleanup in progress: extra files being removed, session being reset
 
 
-class SR_Parm():
+class StoryRoomConfiguration():
 
     # strings
     c_title_text = 'Riverton FamilySearch Story Room'
@@ -38,6 +38,7 @@ class SR_Parm():
     ttl = 'Story Room'       # control window title
     info_line = '{} Status: {}, Available disk space: {:.1f}G'
     t_leadin_msg = 'Start recording in {} seconds' # what displays on the monitor (projector) screen
+    t_wait_for_start_msg = 'Starting...please wait'
     t_record_msg = 'Recording time remaining: {} minutes'
     t_end_msg = 'Recording time remaining: {} seconds'
     c_time_left_msg = '{} minutes left'
@@ -46,7 +47,7 @@ class SR_Parm():
     c_backup_unavailable_msg = 'Backup system is not available'
     c_usb_remove_msg = 'Please remove the USB drive'
     c_usb_status_hdr = 'USB Drive'
-    c_usb_info_line = 'Status: {}, Available disk space: {:.1f}G'
+    c_usb_info_line = '{}, Available disk space: {:.1f}G'
 
     # timer usage stuff
     t_drift = 1 # for test computer: 1-(100/3600) # allow time for processing between .after calls; varies per machine
@@ -55,7 +56,7 @@ class SR_Parm():
     t_leadin_return_at = 1                         # when to call the callback
     t_record_interval = 60                         # how often to update the display (in seconds)
     t_record_length = 60 # 3600                         # one hour of recording = 3600 seconds
-    t_record_warn_at = 90 # 120                         # seconds before end of recording to start warning color change
+    t_record_warn_at = 60 # 120                         # seconds before end of recording to start warning color change
     t_record_return_at = 60                        # seconds before record_length to call the callback
     #tw_end_length = recording_return_at
     t_end_interval = 1
@@ -111,7 +112,6 @@ class SR_Parm():
     obs2_pswd = 'family'
 
     # timer_window
-
 
     ## attributes of the timer window
     tw_mwidth = 1920

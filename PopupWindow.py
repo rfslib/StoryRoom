@@ -5,9 +5,9 @@ author: rfslib
 
 from tkinter import *
 
-from sr_parm import SR_Parm as cfg
+from story_room_config import StoryRoomConfiguration as cfg
 
-class popup_window(Toplevel):
+class PopupWindow(Toplevel):
     debug = False
 
     def __init__(self, master):
@@ -71,6 +71,6 @@ if __name__ == '__main__':
     root.bind('<Escape>', test_wait_for_ack)
     Label(root, text='\n press ESC to continue \n').pack()
     root.update()
-    ow = popup_window(root)
+    ow = PopupWindow(root)
     root.focus_force()
     root.mainloop()

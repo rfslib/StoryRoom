@@ -5,11 +5,11 @@ author: rfslib
 
 from tkinter import *
 
-from sr_parm import Recording_State, SR_Parm as cfg
+from story_room_config import RecordingState, StoryRoomConfiguration as cfg
 
 free_disk = 0
 
-class Control_Window(Toplevel):
+class ControlWindow(Toplevel):
 
     def __init__(self, master, start_callback, stop_callback, exit_callback, debug=False):
         Toplevel.__init__(self, master)
@@ -169,7 +169,7 @@ def test_exit_callback(e):
 
 def test_state_line_msg_lengths(e):
     from time import sleep
-    for state_line in Recording_State:
+    for state_line in RecordingState:
         tst.set_state_line(state_line.value, cfg.c_state_font_color)
         tst.set_time_left(f'{state_line.name}', 'Black')
         tst.update()
@@ -182,7 +182,7 @@ if __name__ == '__main__':
     root = Tk()
     root.geometry( '300x100+0+0' )
     root.title( 'close me to exit test' )
-    tst = Control_Window(root, None, None, test_exit_callback, debug=False )
+    tst = ControlWindow(root, None, None, test_exit_callback, debug=False )
     tst.bind('<Escape>', test_state_line_msg_lengths)
     tst.set_state_line('Press <Escape> to show all state messages', cfg.c_state_font_color)
     tst.set_info_line_1(cfg.info_line.format('Main System', 'test', 0), cfg.c_text_soft_color)

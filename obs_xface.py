@@ -5,7 +5,7 @@
     purpose: a simplified interface to manage obs startup and status for story_room
 """
 
-from sr_parm import SR_Parm as cfg
+from story_room_config import StoryRoomConfiguration as cfg
 
 import asyncio
 from simpleobsws import obsws
@@ -18,7 +18,7 @@ debug = True
 class OBS_Error(Exception):
     pass
 
-class OBS_Xface(obsws):
+class OBSXface(obsws):
 
     def __init__(self, 
         host :str = 'localhost', 
