@@ -5,10 +5,12 @@ author: rfslib
 control "Story Room" recording sessions
 '''
 # TODO: how to show video sans delay
+# TODO: check, set Sources, Profile, Scene (create standards for these), (so no manual settings are required?)
 # TODO: all text to sr_parms
 # TODO: cancel on countdown needs to return to drive removal
 # TODO: force focus on control_window
 # TODO: all logic needs review after moving countdown stuff from timer_window
+# TODO: method to select copy of past recording
 # TODO: verify space on USB drive
 # TODO: verify space on system drive(s)
 # TODO: check that OBS is running and start it before starting countdown to recording start
@@ -22,6 +24,8 @@ control "Story Room" recording sessions
 # TODO: set filename format (SetFilenameFormatting)
 # TODO: QSG (have this app set all parameters so no manual settings are required)
 # TODO: warn on version mismatch for OBS, websockets and simpleobsws
+# DONE: cancel on countdown needs to return to drive removal
+# DONE: limit length of video filename
 # DONE: rename sr_parms to sr_config
 # DONE: periodically check OBS status (every nn seconds)
 # DONE: catch OBS events (? under what conditions? connect() has to be active)
