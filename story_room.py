@@ -4,6 +4,7 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
+# TODO: use mp4; mkv no workee on iphone
 # TODO: how to show video sans delay
 # TODO: check, set Sources, Profile, Scene (create standards for these), (so no manual settings are required?)
 # TODO: all text to sr_parms
