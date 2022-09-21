@@ -48,6 +48,9 @@ class TimerWindow(Toplevel):
     def set_alpha(self, alpha):
         self.attributes('-alpha', alpha)
 
+    def set_focus(self):
+        self.focus_force()
+
 if __name__ == '__main__':
     from time import sleep
     ctr = 0

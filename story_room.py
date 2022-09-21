@@ -4,6 +4,7 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
+# TODO: automatic login and app startup: Main
 # TODO: use mp4; mkv no workee on iphone
 # TODO: how to show video sans delay
 # TODO: check, set Sources, Profile, Scene (create standards for these), (so no manual settings are required?)
@@ -25,6 +26,8 @@ control "Story Room" recording sessions
 # TODO: set filename format (SetFilenameFormatting)
 # TODO: QSG (have this app set all parameters so no manual settings are required)
 # TODO: warn on version mismatch for OBS, websockets and simpleobsws
+# DONE: automatic login and app startup: Backup
+# DONE: force focus of timer on monitor (projector) screen
 # DONE: cancel on countdown needs to return to drive removal
 # DONE: limit length of video filename
 # DONE: rename sr_parms to sr_config
@@ -118,6 +121,9 @@ class Story_Room():
         self.obs_status_updater = None # holds the update method 'after' call so it can be stopped on exit
         self.update_obs_status() # start the updater, which keeps itself going with an 'after' call
 
+        # bring the timer window back in case OBS covered it
+        self.tw.set_focus()
+        
         # USB prep
         self.usb_status_updater = None # a place to hold the USB status line update method 'after' call so it can be stopped on exit
         self.set_usb_drive() # set the current USB drive letter and state of any exisitng removable drive
@@ -358,7 +364,7 @@ class Story_Room():
 ### --- end of status update and background tasks
 
 ### --- timer stuff
-    def session_start_countdown(self, msg_text:str='countdown: {}', length:int=20, upd_every: int=1, warn_at: int=10, return_at: int=0, show_cw_timer: int=True, callback=None):
+    def session_start_countdown(self, msg_text:str='countdown: {}', length:int=20, upd_every: int=1, warn_at: int=10, return_at: int=0, show_cw_timer: bool=True, callback=None):
         if self.tw_countdown_active: return -1 # a countdown is already active, can't start another
         self.tw_countdown_active = True # set "in-countdown" flag
         if self._debug: print(f'>>> start_countdown: count down {length} seconds, update every {upd_every} seconds')
@@ -373,6 +379,7 @@ class Story_Room():
         self.tw_show_cw_timer = show_cw_timer
         self.tw.set_alpha(cfg.tw_normalpha)
         self.tw.set_bg(cfg.tw_normbg)
+        self.tw.set_focus()
         self.session_countdown()  # start the countdown
 
     def session_stop_countdown(self, new_callback): # tell the current countdown to stop early
