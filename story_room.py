@@ -4,6 +4,7 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
+# TODO: delete files after 3 months or xxG free disk (whichever is longer time)
 # TODO: automatic login and app startup: Main
 # TODO: use mp4; mkv no workee on iphone
 # TODO: how to show video sans delay

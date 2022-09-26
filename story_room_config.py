@@ -51,12 +51,12 @@ class StoryRoomConfiguration():
 
     # timer usage stuff
     t_drift = 1 # for test computer: 1-(100/3600) # allow time for processing between .after calls; varies per machine
-    t_leadin_to_start = 5 # 20                         # length of the countdown (in seconds)
+    t_leadin_to_start = 20 # 20                         # length of the countdown (in seconds)
     t_leadin_warn_at = 20                          # when to set to warning color (in seconds)
     t_leadin_return_at = 1                         # when to call the callback
     t_record_interval = 60                         # how often to update the display (in seconds)
-    t_record_length = 60 # 3600                         # one hour of recording = 3600 seconds
-    t_record_warn_at = 60 # 120                         # seconds before end of recording to start warning color change
+    t_record_length = 3600 # 3600                         # one hour of recording = 3600 seconds
+    t_record_warn_at = 120 # 120                         # seconds before end of recording to start warning color change
     t_record_return_at = 60                        # seconds before record_length to call the callback
     #tw_end_length = recording_return_at
     t_end_interval = 1
