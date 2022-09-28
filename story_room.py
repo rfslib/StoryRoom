@@ -4,11 +4,12 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
-# TODO: delete files after 3 months or xxG free disk (whichever is longer time)
 # TODO: automatic login and app startup: Main
 # TODO: use mp4; mkv no workee on iphone
 # TODO: how to show video sans delay
 # TODO: check, set Sources, Profile, Scene (create standards for these), (so no manual settings are required?)
+# TODO: auto-adjust to screen size (init for cfg)
+# TODO: delete files after 3 months or xxG free disk (whichever is longer time)
 # TODO: all text to sr_parms
 # TODO: cancel on countdown needs to return to drive removal
 # TODO: force focus on control_window
@@ -53,6 +54,7 @@ control "Story Room" recording sessions
 
 version = '20220825'
 
+from time import sleep
 import tkinter as tk
 from psutil import disk_partitions
 from psutil import disk_usage
@@ -213,6 +215,7 @@ class Story_Room():
         if self._debug: print(f'>>> copying {self.obs1.file_name} to {dest_filename}') 
         self.set_state(RecordingState.COPYING)
         self.tw.set_txt('Copying the video to the USB drive...')
+        sleep(0.5) # Does the set_txt need a bit of time?
         try:
             copy(self.obs1.file_name, dest_filename)
         except:
@@ -455,6 +458,7 @@ class Story_Room():
 
 ### --- main
 if __name__ == '__main__':
+    print(f'\n>>> main scrx: {cfg.adjustx}, scry: {cfg.adjusty}')
     st = Story_Room()
     st.wait_for_drive() # drive insertion starts a recording session
 

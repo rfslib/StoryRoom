@@ -62,8 +62,17 @@ class StoryRoomConfiguration():
     t_end_interval = 1
     #tw_end_warn_at = recording_return_at
 
+
+    # control screen resolution adjustment; this was originally set for a 1280x800 screen in landscape
+    screen1280x = 1280 # reference screen width
+    screen800y = 800 # reference screen width
+    screen1920x = 1920
+    screen1080y = 1080
+    adjustx = (screen1920x / screen1280x) # multiplication factor for x
+    adjusty = (screen1080y /screen800y) # multiplication factor for y
+
     # control_window
-    c_title_fontsize = 36
+    c_title_fontsize = int(36 * adjustx)
     c_bg_color = 'antique white' #'LightGreen' # 'SystemButtonFace'
     c_bg_alpha = 0.95
     c_text_info_color = 'Black'
@@ -74,19 +83,19 @@ class StoryRoomConfiguration():
     c_bold_font = 'Consolas Bold'
     c_italic_font = 'Consolas Italic'
     c_btn_height = 4
-    c_btn_fontsize = 24
+    c_btn_fontsize = int(24 * adjustx)
     c_btn_idle_color = 'linen' # 'LightGrey'
     c_btn_active_color = 'Red'
     c_btn_bg_color = 'misty rose' #'SystemButtonFace'
-    c_time_left_fontsize = 84
+    c_time_left_fontsize = int(84 * adjustx)
 
     #font = 'Lucida Console'    # primary font for text
                   # font size
     fontcolor = '#100010'
     padxy = 2                   # padding inside of frames
-    c_info_fontsize = 16
+    c_info_fontsize = int(16 * adjustx)
     info_fontcolor = 'grey'
-    c_state_fontsize = 16
+    c_state_fontsize = int(16 * adjustx)
     c_state_font_color = 'Navy' # 'DarkBlue'
 
     free_disk_min = 3000.0 # minimum available space on disk before displaying warning
