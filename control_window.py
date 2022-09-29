@@ -5,16 +5,20 @@ author: rfslib
 
 from tkinter import *
 
+import logging
+
 from story_room_config import RecordingState, StoryRoomConfiguration as cfg
 
 free_disk = 0
 
 class ControlWindow(Toplevel):
 
-    def __init__(self, master, start_callback, stop_callback, exit_callback, debug=False):
+    def __init__(self, master, start_callback, stop_callback, exit_callback, logger:logging):
         Toplevel.__init__(self, master)
 
-        self._debug = debug
+        logger.info('ControlWindow init started')
+
+        self._debug = False
 
         self.start_callback = start_callback
         self.stop_callback = stop_callback

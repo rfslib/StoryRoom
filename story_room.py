@@ -4,6 +4,7 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
+# TODO: *** FIX OBS Startup and projector display
 # TODO: automatic login and app startup: Main
 # TODO: use mp4; mkv no workee on iphone
 # TODO: how to show video sans delay
@@ -52,7 +53,7 @@ control "Story Room" recording sessions
 # DONE: warn on low disk space (use psutil.disk_usage(".").free/1024/1024/1024)
 # DONE: start OBS here or a separate class instead of startup so it can be checked/started from here
 
-version = '20220825'
+version = '20220929'
 
 from time import sleep
 import tkinter as tk
@@ -62,6 +63,9 @@ from psutil import disk_usage
 from os.path import basename
 from os import system
 from shutil import copy
+
+import logging
+from datetime import datetime
 
 from story_room_config import StoryRoomConfiguration as cfg
 from story_room_config import RecordingState
@@ -90,31 +94,32 @@ class Story_Room():
     tw_countdown_abort = False
     tw_show_cw_timer = True
 
-    def __init__(self) -> None:
+    def __init__(self, logger:logging) -> None:
+        logger.info('Story Room init started')
         self.wm = tk.Tk() # the toplevel Tk window (not shown)
         self.wm.withdraw() # hide the toplevel window
 
         self.usb_drive_letter = tk.StringVar()
         
         # set up the control screen
-        self.cw = ControlWindow(self.wm, self.session_init, self.session_stop, self.debug_exit, debug=self._debug)
+        self.cw = ControlWindow(self.wm, self.session_init, self.session_stop, self.debug_exit, logger=logger)
         self.set_state(RecordingState.INIT)
 
         # set up the timer display on the video monitor (OBS calls it a 'projector')
-        self.tw = TimerWindow(self.wm)
+        self.tw = TimerWindow(self.wm, logger)
 
         # set up the keyboard entry window (for getting a filename)
-        self.kb = TouchKeyboardInput(self.wm)
+        self.kb = TouchKeyboardInput(self.wm, logger)
 
         # set up the oops message window, which we hope to never use
         self.ow = PopupWindow(self.wm)
 
         # open a channel to OBS on this system and on a remote backup system using websockets
-        self.obs1 = OBSXface(host=cfg.obs1_host, port=cfg.obs1_port, password=cfg.obs1_pswd, callback=self.on_obs1_event)
+        self.obs1 = OBSXface(logger, host=cfg.obs1_host, port=cfg.obs1_port, password=cfg.obs1_pswd, callback=self.on_obs1_event)
         if self._debug: print(f'>>> obs1 configured: {self.obs1}')
         if cfg.obs2_host != '': # if a backup system is configured, connect to it
             try:
-                self.obs2 = OBSXface(host=cfg.obs2_host, port=cfg.obs2_port, password=cfg.obs2_pswd, callback=self.on_obs2_event)
+                self.obs2 = OBSXface(logger, host=cfg.obs2_host, port=cfg.obs2_port, password=cfg.obs2_pswd, callback=self.on_obs2_event)
             except:
                 self.obs2 = None
                 print('>>> Backup OBS did not respond!!!')
@@ -429,6 +434,7 @@ class Story_Room():
 
 ### --- miscellaneous
     def debug_exit(self, e):
+        
         self.cw.withdraw()     
         try: self.wm.after_cancel(self.obs_status_updater)
         except: pass
@@ -458,8 +464,23 @@ class Story_Room():
 
 ### --- main
 if __name__ == '__main__':
+    # https://realpython.com/python-logging/
+    # https://docs.python.org/3/howto/logging.html
+    logger = logging.getLogger('SRlog')
+    # https://docs.python.org/3/library/logging.html#logging.basicConfig
+    logging.basicConfig(
+        #filename=r'C:\Users\Story Room\Documents\srlog.' + datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename=r'srlog.' + datetime.now().strftime('%Y%m%d_%H%M%S'),
+        filemode='a',
+        level=logging.INFO,
+        format='%(asctime)s: %(levelname)s: %(message)s',
+        datefmt='%Y%m%d_%H%M%S'
+    )
+    logging.captureWarnings(True)
+    logging.info('Story Room started')
+
     print(f'\n>>> main scrx: {cfg.adjustx}, scry: {cfg.adjusty}')
-    st = Story_Room()
+    st = Story_Room(logger)
     st.wait_for_drive() # drive insertion starts a recording session
 
 

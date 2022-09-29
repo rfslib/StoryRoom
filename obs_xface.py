@@ -13,6 +13,8 @@ import psutil
 import subprocess
 from time import sleep
 
+import logging
+
 debug = True
 
 class OBS_Error(Exception):
@@ -21,16 +23,19 @@ class OBS_Error(Exception):
 class OBSXface(obsws):
 
     def __init__(self, 
+        lg:logging,
         host :str = 'localhost', 
         port :int = 4444, 
         password :str = None, 
         call_poll_delay :int = 100, 
         loop: asyncio.BaseEventLoop=None, 
         callback = None, 
-        local :bool = True):
+        local :bool = True,):
         super().__init__(host, port, password)
 
         self._debug = False
+
+        lg.info('obs_xface init started')
         
         # Set up our public variables
         self.host = host                # host address

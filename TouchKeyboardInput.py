@@ -12,16 +12,20 @@ for font style changes see https://www.pythontutorial.net/tkinter/ttk-style/
 from tkinter import *
 from tkinter import ttk
 
+import logging
+
 from story_room_config import StoryRoomConfiguration as cfg
 
 class TouchKeyboardInput(Toplevel):
 
     debug = False
 
-    def __init__(self, master): # Create the keyboard window, then hide (withdraw) it
+    def __init__(self, master, logger:logging): # Create the keyboard window, then hide (withdraw) it
         Toplevel.__init__(self, master)
 
         self.withdraw() # hide already so it doesn't flash while being built
+
+        logger.info('TouchKeyboardInput init started')
         
         self.text = StringVar()         # update this to force exit
         self.text_prompt = StringVar()  # changeable prompt
