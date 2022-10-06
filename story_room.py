@@ -4,8 +4,13 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
+# TODO: *** FIX OBS Startup and projector display
+# TODO: automatic login and app startup: Main
+# TODO: use mp4; mkv no workee on iphone
 # TODO: how to show video sans delay
 # TODO: check, set Sources, Profile, Scene (create standards for these), (so no manual settings are required?)
+# TODO: auto-adjust to screen size (init for cfg)
+# TODO: delete files after 3 months or xxG free disk (whichever is longer time)
 # TODO: all text to sr_parms
 # TODO: cancel on countdown needs to return to drive removal
 # TODO: force focus on control_window
@@ -24,6 +29,8 @@ control "Story Room" recording sessions
 # TODO: set filename format (SetFilenameFormatting)
 # TODO: QSG (have this app set all parameters so no manual settings are required)
 # TODO: warn on version mismatch for OBS, websockets and simpleobsws
+# DONE: automatic login and app startup: Backup
+# DONE: force focus of timer on monitor (projector) screen
 # DONE: cancel on countdown needs to return to drive removal
 # DONE: limit length of video filename
 # DONE: rename sr_parms to sr_config
@@ -46,8 +53,9 @@ control "Story Room" recording sessions
 # DONE: warn on low disk space (use psutil.disk_usage(".").free/1024/1024/1024)
 # DONE: start OBS here or a separate class instead of startup so it can be checked/started from here
 
-version = '20220825'
+version = '20220929'
 
+from time import sleep
 import tkinter as tk
 from psutil import disk_partitions
 from psutil import disk_usage
@@ -55,6 +63,9 @@ from psutil import disk_usage
 from os.path import basename
 from os import system
 from shutil import copy
+
+import logging
+from datetime import datetime
 
 from story_room_config import StoryRoomConfiguration as cfg
 from story_room_config import RecordingState
@@ -83,31 +94,32 @@ class Story_Room():
     tw_countdown_abort = False
     tw_show_cw_timer = True
 
-    def __init__(self) -> None:
+    def __init__(self, logger:logging) -> None:
+        logger.info('Story Room init started')
         self.wm = tk.Tk() # the toplevel Tk window (not shown)
         self.wm.withdraw() # hide the toplevel window
 
         self.usb_drive_letter = tk.StringVar()
         
         # set up the control screen
-        self.cw = ControlWindow(self.wm, self.session_init, self.session_stop, self.debug_exit, debug=self._debug)
+        self.cw = ControlWindow(self.wm, self.session_init, self.session_stop, self.debug_exit, logger=logger)
         self.set_state(RecordingState.INIT)
 
         # set up the timer display on the video monitor (OBS calls it a 'projector')
-        self.tw = TimerWindow(self.wm)
+        self.tw = TimerWindow(self.wm, logger)
 
         # set up the keyboard entry window (for getting a filename)
-        self.kb = TouchKeyboardInput(self.wm)
+        self.kb = TouchKeyboardInput(self.wm, logger)
 
         # set up the oops message window, which we hope to never use
         self.ow = PopupWindow(self.wm)
 
         # open a channel to OBS on this system and on a remote backup system using websockets
-        self.obs1 = OBSXface(host=cfg.obs1_host, port=cfg.obs1_port, password=cfg.obs1_pswd, callback=self.on_obs1_event)
+        self.obs1 = OBSXface(logger, host=cfg.obs1_host, port=cfg.obs1_port, password=cfg.obs1_pswd, callback=self.on_obs1_event)
         if self._debug: print(f'>>> obs1 configured: {self.obs1}')
         if cfg.obs2_host != '': # if a backup system is configured, connect to it
             try:
-                self.obs2 = OBSXface(host=cfg.obs2_host, port=cfg.obs2_port, password=cfg.obs2_pswd, callback=self.on_obs2_event)
+                self.obs2 = OBSXface(logger, host=cfg.obs2_host, port=cfg.obs2_port, password=cfg.obs2_pswd, callback=self.on_obs2_event)
             except:
                 self.obs2 = None
                 print('>>> Backup OBS did not respond!!!')
@@ -117,6 +129,9 @@ class Story_Room():
         self.obs_status_updater = None # holds the update method 'after' call so it can be stopped on exit
         self.update_obs_status() # start the updater, which keeps itself going with an 'after' call
 
+        # bring the timer window back in case OBS covered it
+        self.tw.set_focus()
+        
         # USB prep
         self.usb_status_updater = None # a place to hold the USB status line update method 'after' call so it can be stopped on exit
         self.set_usb_drive() # set the current USB drive letter and state of any exisitng removable drive
@@ -205,6 +220,7 @@ class Story_Room():
         if self._debug: print(f'>>> copying {self.obs1.file_name} to {dest_filename}') 
         self.set_state(RecordingState.COPYING)
         self.tw.set_txt('Copying the video to the USB drive...')
+        sleep(0.5) # Does the set_txt need a bit of time?
         try:
             copy(self.obs1.file_name, dest_filename)
         except:
@@ -357,7 +373,7 @@ class Story_Room():
 ### --- end of status update and background tasks
 
 ### --- timer stuff
-    def session_start_countdown(self, msg_text:str='countdown: {}', length:int=20, upd_every: int=1, warn_at: int=10, return_at: int=0, show_cw_timer: int=True, callback=None):
+    def session_start_countdown(self, msg_text:str='countdown: {}', length:int=20, upd_every: int=1, warn_at: int=10, return_at: int=0, show_cw_timer: bool=True, callback=None):
         if self.tw_countdown_active: return -1 # a countdown is already active, can't start another
         self.tw_countdown_active = True # set "in-countdown" flag
         if self._debug: print(f'>>> start_countdown: count down {length} seconds, update every {upd_every} seconds')
@@ -372,6 +388,7 @@ class Story_Room():
         self.tw_show_cw_timer = show_cw_timer
         self.tw.set_alpha(cfg.tw_normalpha)
         self.tw.set_bg(cfg.tw_normbg)
+        self.tw.set_focus()
         self.session_countdown()  # start the countdown
 
     def session_stop_countdown(self, new_callback): # tell the current countdown to stop early
@@ -417,6 +434,7 @@ class Story_Room():
 
 ### --- miscellaneous
     def debug_exit(self, e):
+        
         self.cw.withdraw()     
         try: self.wm.after_cancel(self.obs_status_updater)
         except: pass
@@ -446,7 +464,23 @@ class Story_Room():
 
 ### --- main
 if __name__ == '__main__':
-    st = Story_Room()
+    # https://realpython.com/python-logging/
+    # https://docs.python.org/3/howto/logging.html
+    logger = logging.getLogger('SRlog')
+    # https://docs.python.org/3/library/logging.html#logging.basicConfig
+    logging.basicConfig(
+        #filename=r'C:\Users\Story Room\Documents\srlog.' + datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename=r'srlog.' + datetime.now().strftime('%Y%m%d_%H%M%S'),
+        filemode='a',
+        level=logging.INFO,
+        format='%(asctime)s: %(levelname)s: %(message)s',
+        datefmt='%Y%m%d_%H%M%S'
+    )
+    logging.captureWarnings(True)
+    logging.info('Story Room started')
+
+    print(f'\n>>> main scrx: {cfg.adjustx}, scry: {cfg.adjusty}')
+    st = Story_Room(logger)
     st.wait_for_drive() # drive insertion starts a recording session
 
 

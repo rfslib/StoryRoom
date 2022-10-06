@@ -5,13 +5,17 @@ author: rfslib
 
 from tkinter import *
 
+import logging
+
 from story_room_config import StoryRoomConfiguration as cfg
 
 class TimerWindow(Toplevel):
     debug = False
 
-    def __init__(self, master):
+    def __init__(self, master, logger:logging):
         Toplevel.__init__(self,master)
+        
+        logger.info('TimerWindow init started')
         
         # set our look
         self.config(bg=cfg.tw_normbg)
@@ -47,6 +51,9 @@ class TimerWindow(Toplevel):
 
     def set_alpha(self, alpha):
         self.attributes('-alpha', alpha)
+
+    def set_focus(self):
+        self.focus_force()
 
 if __name__ == '__main__':
     from time import sleep

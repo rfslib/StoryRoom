@@ -12,14 +12,20 @@ for font style changes see https://www.pythontutorial.net/tkinter/ttk-style/
 from tkinter import *
 from tkinter import ttk
 
+import logging
+
+from story_room_config import StoryRoomConfiguration as cfg
+
 class TouchKeyboardInput(Toplevel):
 
     debug = False
 
-    def __init__(self, master): # Create the keyboard window, then hide (withdraw) it
+    def __init__(self, master, logger:logging): # Create the keyboard window, then hide (withdraw) it
         Toplevel.__init__(self, master)
 
         self.withdraw() # hide already so it doesn't flash while being built
+
+        logger.info('TouchKeyboardInput init started')
         
         self.text = StringVar()         # update this to force exit
         self.text_prompt = StringVar()  # changeable prompt
@@ -28,17 +34,18 @@ class TouchKeyboardInput(Toplevel):
         self.prompt = 'enter something:'
         self.maxlength = 48             # max number of characters in input string
 
-        self.ixpad = 3 # was 6
-        self.iypad = 10 # was 10
-        self.xpad = 1
-        self.ypad = 2
-        self.key_width = 4
+        self.ixpad = int(3 * cfg.adjustx) # was 6
+        self.iypad = int(10 * cfg.adjusty) # was 10
+        self.xpad = int(1 * cfg.adjustx)
+        self.ypad = int(2 * cfg.adjusty)
+        self.key_width = int(4 * cfg.adjustx)
+        print(f'>>> kbd: ixpad: {self.ixpad}, iypad: {self.iypad}, xpad: {self.xpad}, ypad: {self.ypad}')
         paddings = {'ipadx': self.ixpad, 'ipady': self.iypad, 'padx': self.xpad, 'pady': self.ypad}
-        entry_font = {'font': ('Consolas Bold', 16)}
+        entry_font = {'font': ('Consolas Bold', int(16 * cfg.adjustx))}
         self.style = ttk.Style(self)
         #self.style.configure('TEntry', font=('Consolas Bold', 11))
-        self.style.configure('TLabel', font=('Consolas', 12))
-        self.style.configure('TButton', font=('Consolas Bold', 16))
+        self.style.configure('TLabel', font=('Consolas', int(12 * cfg.adjustx)))
+        self.style.configure('TButton', font=('Consolas Bold', int(16 * cfg.adjusty)))
         
         self.overrideredirect(True) # don't show title 
         self.attributes('-topmost', True) # stay on top

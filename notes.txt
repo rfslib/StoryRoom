@@ -1,4 +1,20 @@
 
+------------------------------------------
+Auto Logon:
+(https://www.itprotoday.com/windows-78/how-do-i-enable-autologon)
+(see notes and gotchas at 
+    https://learn.microsoft.com/en-us/troubleshoot/windows-server/user-profiles-and-logon/turn-on-automatic-logon)
+
+\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\
+"DefaultUserName"="UserID"
+"DefaultPassword"="UserPassword"
+"AutoAdminLogon"="1"
+["DefaultDomainName"="Domain"]
+------------------------------------------
+Startup Apps:
+
+Win-R, shell:startup, past shortcuts into folder
+-------------------------------------------
 on-screen keyboard
 https://github.com/topics/virtual-keyboard-python # points to four github projects
 https://cppsecrets.com/users/5617971101051071011161151049711410997484852494964103109971051084699111109/On-Screen-Keyboard-using-Python.php

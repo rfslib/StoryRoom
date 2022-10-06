@@ -51,19 +51,28 @@ class StoryRoomConfiguration():
 
     # timer usage stuff
     t_drift = 1 # for test computer: 1-(100/3600) # allow time for processing between .after calls; varies per machine
-    t_leadin_to_start = 5 # 20                         # length of the countdown (in seconds)
+    t_leadin_to_start = 20 # 20                         # length of the countdown (in seconds)
     t_leadin_warn_at = 20                          # when to set to warning color (in seconds)
     t_leadin_return_at = 1                         # when to call the callback
     t_record_interval = 60                         # how often to update the display (in seconds)
-    t_record_length = 60 # 3600                         # one hour of recording = 3600 seconds
-    t_record_warn_at = 60 # 120                         # seconds before end of recording to start warning color change
+    t_record_length = 3600 # 3600                         # one hour of recording = 3600 seconds
+    t_record_warn_at = 120 # 120                         # seconds before end of recording to start warning color change
     t_record_return_at = 60                        # seconds before record_length to call the callback
     #tw_end_length = recording_return_at
     t_end_interval = 1
     #tw_end_warn_at = recording_return_at
 
+
+    # control screen resolution adjustment; this was originally set for a 1280x800 screen in landscape
+    screen1280x = 1280 # reference screen width
+    screen800y = 800 # reference screen width
+    screen1920x = 1920
+    screen1080y = 1080
+    adjustx = (screen1920x / screen1280x) # multiplication factor for x
+    adjusty = (screen1080y /screen800y) # multiplication factor for y
+
     # control_window
-    c_title_fontsize = 36
+    c_title_fontsize = int(36 * adjustx)
     c_bg_color = 'antique white' #'LightGreen' # 'SystemButtonFace'
     c_bg_alpha = 0.95
     c_text_info_color = 'Black'
@@ -74,19 +83,19 @@ class StoryRoomConfiguration():
     c_bold_font = 'Consolas Bold'
     c_italic_font = 'Consolas Italic'
     c_btn_height = 4
-    c_btn_fontsize = 24
+    c_btn_fontsize = int(24 * adjustx)
     c_btn_idle_color = 'linen' # 'LightGrey'
     c_btn_active_color = 'Red'
     c_btn_bg_color = 'misty rose' #'SystemButtonFace'
-    c_time_left_fontsize = 84
+    c_time_left_fontsize = int(84 * adjustx)
 
     #font = 'Lucida Console'    # primary font for text
                   # font size
     fontcolor = '#100010'
     padxy = 2                   # padding inside of frames
-    c_info_fontsize = 16
+    c_info_fontsize = int(16 * adjustx)
     info_fontcolor = 'grey'
-    c_state_fontsize = 16
+    c_state_fontsize = int(16 * adjustx)
     c_state_font_color = 'Navy' # 'DarkBlue'
 
     free_disk_min = 3000.0 # minimum available space on disk before displaying warning
