@@ -25,4 +25,4 @@ The Story Room is a sound-proofed room where people can record a one-hour video.
     * OBS Studio
     * OBS websockets
 
-Note that OBS Studio allows internal scripting with Python, but that it was substantially more complex to do the controlling and on-screen display, so the control program was changed to be stand-alone.
+Note that OBS Studio allows internal scripting with Python, but that it was substantially more complex to do the controlling and on-screen display, so the control program was changed to be stand-alone (and use a supported, current version of Python).
