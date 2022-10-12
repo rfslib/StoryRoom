@@ -56,8 +56,12 @@ class ControlWindow(Toplevel):
         self.state_frame.grid(row=1, column=0, columnspan=3, padx=cfg.padxy, pady=cfg.padxy, sticky='ew')
         self.state_line=StringVar()
         self.state_label = Label(master=self.state_frame, textvariable=self.state_line, fg=cfg.c_state_font_color, bg=cfg.c_bg_color,
-                            font=(cfg.c_bold_font, cfg.c_state_fontsize))
+                            font=(cfg.c_state_font, cfg.c_state_fontsize))
         self.state_label.grid(row=0, column=0, sticky='w')
+        self.action_line=StringVar()
+        self.state_action = Label(master=self.state_frame, textvariable=self.action_line, fg=cfg.c_action_font_color, bg=cfg.c_bg_color,
+                            font=(cfg.c_action_font, cfg.c_action_fontsize))
+        self.state_action.grid(row=1, column=0, sticky='w')
         
         # create a frame for interactions (buttons, text entry, etc.)
         self.int_frame = Frame(master=self, bg=cfg.c_bg_color, padx=cfg.padxy, pady=cfg.padxy)
@@ -115,7 +119,9 @@ class ControlWindow(Toplevel):
         self.update()      
         if self._debug: print('control window ready')
 
-        self.bind('<Control-Alt-F12>', self.exit_callback)
+        #self.bind('<Control-Alt-F12>', self.exit_callback)
+        self.bind('<Control-q>', self.exit_callback)
+        
 
 # ----
 
@@ -135,9 +141,10 @@ class ControlWindow(Toplevel):
         self.btn_stop['state'] = DISABLED
         self.btn_stop.config(fg=cfg.c_btn_idle_color)
 
-    def set_state_line(self, textin, text_color):
+    def set_state_line(self, txt_tuple, text_color):
         self.state_label.config(fg=text_color)
-        self.state_line.set(str(textin))
+        self.state_line.set(str(txt_tuple[0]))
+        self.action_line.set(str(txt_tuple[1]))
 
     def set_event_line_1(self, textin, text_color=cfg.c_text_info_color):
         self.events_1.config(fg=text_color)
@@ -167,7 +174,7 @@ class ControlWindow(Toplevel):
 ## --- testing stuff ensues
 #         
 def test_exit_callback(e):
-    print(f'>>> exiting ({e})')
+    print(f'\n>>> exiting ({e})\n')
     tst.destroy()
     root.destroy()
 
@@ -177,19 +184,29 @@ def test_state_line_msg_lengths(e):
         tst.set_state_line(state_line.value, cfg.c_state_font_color)
         tst.set_time_left(f'{state_line.name}', 'Black')
         tst.update()
-        sleep(2)
-    tst.set_state_line('All done :)', cfg.c_state_font_color)
+        sleep(3)
+    tst.set_state_line(('Showing of state messages is complete', ':)'), cfg.c_state_font_color)
     tst.set_time_left('', 'Black')
 
 if __name__ == '__main__':
 
+    logger = logging.getLogger('ControlWindowTestLog')
+    logging.basicConfig(
+        filename=r'ControlWindowsTest.log', 
+        filemode='w', 
+        level=logging.INFO,
+        format='%(asctime)s: %(levelname)s: %(message)s',
+        datefmt='%Y%m%d_%H%M%S'
+    )
+    logging.captureWarnings(True)
+    logging.info('ControlWindow test started')
     root = Tk()
     root.geometry( '300x100+0+0' )
     root.title( 'close me to exit test' )
-    tst = ControlWindow(root, None, None, test_exit_callback, debug=False )
-    tst.bind('<Escape>', test_state_line_msg_lengths)
-    tst.set_state_line('Press <Escape> to show all state messages', cfg.c_state_font_color)
+    tst = ControlWindow(root, None, None, test_exit_callback, logger)
     tst.set_info_line_1(cfg.info_line.format('Main System', 'test', 0), cfg.c_text_soft_color)
     tst.set_info_line_2(cfg.info_line.format('Backup System', 'test', 0), cfg.c_text_soft_color)
     tst.set_info_line_3(cfg.info_line.format('USB', 'test', 0), cfg.c_text_soft_color)
+    tst.bind('<Escape>', test_state_line_msg_lengths)
+    tst.set_state_line(('Init complete','Press <Escape> to show all state messages'), cfg.c_state_font_color)
     root.mainloop()

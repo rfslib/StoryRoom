@@ -1,5 +1,6 @@
 # for Story Room
 simpleobsws.py
+srlog.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -10,22 +10,22 @@ A class for the current program state
 from enum import Enum # , auto
 
 class RecordingState(Enum):
-    INIT = 'Initializing the system'           # program initialization
-    DRIVE_ALREADY = 'There\'s a USB drive mounted. Please remove it to proceed...'
-    WAIT_FOR_DRIVE = 'System Ready. Insert a new USB drive to begin...' # ready to record
-    DRIVE_INSERTED = 'Drive attached.' # a removable drive has been connected
-    GET_FILENAME = 'Enter a name for the video file...'   # get the final filename
-    WAIT_FOR_START = 'Everything is ready. Tap the "Start Recording" button to begin...' # ready to record, waiting for go to start countdown
-    COUNTDOWN = 'Counting down to start of recording. You can leave the room now :)'      # countdown to start of recording is in progress
-    RECORDING = 'Recording. Please wait (or press the stop button to end it early).'      # recording is in progress
-    ABORTING = 'Early stop of the recording requested.'       # early stop of recording was requested
-    FINISHING = 'Stopping the Recording.'     # recording stop has been requested
-    FINISHED = 'Recording has stopped. Re-muxing the file and preparing to copy to the USB drive.'       # recording has stopped (reMUX in progress)
-    COPYING = 'Copying the video file to the USB drive. Please wait...'        # video file is being copied to removable drive
-    COPY_FAILED = 'Copy to USB drive failed. See the recovery procedure in the usage guide.'
-    DRIVE_READY = 'Copy to the USB drive is complete. Please remove the drive now...'    # copy is complete, waiting for drive to be removed
-    DRIVE_REMOVED = 'USB Drive removed. Bringing out the janitorial supplies.'  # drive removed
-    CLEANUP = 'Recording session is over. Preparing the system for the next session.'        # cleanup in progress: extra files being removed, session being reset
+    INIT = ('Initializing the system.', 'Please wait...')           # program initialization
+    DRIVE_ALREADY = ('There\'s a USB drive mounted.', 'Please remove the USB drive to proceed...')
+    WAIT_FOR_DRIVE = ('System Ready.', 'Insert a new USB drive to begin...') # ready to record
+    DRIVE_INSERTED = ('Drive attached.', 'Please wait...') # a removable drive has been connected
+    GET_FILENAME = ('Waiting for filename entry.', 'Enter a name for the video file...')   # get the final filename
+    WAIT_FOR_START = ('Everything is ready.', 'Tap the "Start Recording" button to begin...') # ready to record, waiting for go to start countdown
+    COUNTDOWN = ('Counting down to start of recording.', 'You can leave the room now :)')      # countdown to start of recording is in progress
+    RECORDING = ('Recording video.', 'Please wait (or press the stop button to end it early).')      # recording is in progress
+    ABORTING = ('Early stop of the recording requested.', 'Please wait...')       # early stop of recording was requested
+    FINISHING = ('Stopping the Recording.', 'Please wait...')     # recording stop has been requested
+    FINISHED = ('Recording stopped. Preparing to copy.', 'Please wait...')       # recording has stopped (reMUX in progress)
+    COPYING = ('Copying the video file to the USB drive.', 'Please wait...')        # video file is being copied to removable drive
+    COPY_FAILED = ('Copy to USB drive failed.', 'See the recovery procedure in the usage guide.')
+    DRIVE_READY = ('Copy to the USB drive is complete.', 'Please remove the drive now...')    # copy is complete, waiting for drive to be removed
+    DRIVE_REMOVED = ('USB Drive removed.', 'Please wait...')  # drive removed
+    CLEANUP = ('Recording session complete. Preparing for the next session.', 'Please wait...')        # cleanup in progress: extra files being removed, session being reset
 
 
 class StoryRoomConfiguration():
@@ -45,6 +45,7 @@ class StoryRoomConfiguration():
     c_main_system_name = 'Main System'
     c_backup_system_name = 'Backup System'
     c_backup_unavailable_msg = 'Backup system is not available'
+    c_backup_no_config_msg = 'Backup system is not configured'
     c_usb_remove_msg = 'Please remove the USB drive'
     c_usb_status_hdr = 'USB Drive'
     c_usb_info_line = '{}, Available disk space: {:.1f}G'
@@ -95,8 +96,12 @@ class StoryRoomConfiguration():
     padxy = 2                   # padding inside of frames
     c_info_fontsize = int(16 * adjustx)
     info_fontcolor = 'grey'
+    c_state_font = c_text_font
     c_state_fontsize = int(16 * adjustx)
     c_state_font_color = 'Navy' # 'DarkBlue'
+    c_action_font = c_bold_font
+    c_action_fontsize = int(24 * adjustx)
+    c_action_font_color = 'Green'
 
     free_disk_min = 3000.0 # minimum available space on disk before displaying warning
     update_obs_status_delay = 5000
@@ -116,7 +121,7 @@ class StoryRoomConfiguration():
     obs1_host = '127.0.0.1'
     obs1_port = 4444
     obs1_pswd = 'family'
-    obs2_host = '10.109.7.204' #'192.168.74.74' #give a host name/ip address to activate second system
+    obs2_host = '' #'10.109.7.204' #'192.168.74.74' #give a host name/ip address to activate second system
     obs2_port = 4444
     obs2_pswd = 'family'
 

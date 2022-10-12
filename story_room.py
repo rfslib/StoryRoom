@@ -4,6 +4,7 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
+# TODO: status and next action to larger text, separate lines
 # TODO: *** FIX OBS Startup and projector display
 # TODO: automatic login and app startup: Main
 # TODO: use mp4; mkv no workee on iphone
@@ -31,6 +32,7 @@ control "Story Room" recording sessions
 # TODO: warn on version mismatch for OBS, websockets and simpleobsws
 # DONE: automatic login and app startup: Backup
 # DONE: force focus of timer on monitor (projector) screen
+# DONE: change exit key to something remotely usable (i.e., ctrl-q)
 # DONE: cancel on countdown needs to return to drive removal
 # DONE: limit length of video filename
 # DONE: rename sr_parms to sr_config
@@ -53,7 +55,7 @@ control "Story Room" recording sessions
 # DONE: warn on low disk space (use psutil.disk_usage(".").free/1024/1024/1024)
 # DONE: start OBS here or a separate class instead of startup so it can be checked/started from here
 
-version = '20220929'
+version = '20221012'
 
 from time import sleep
 import tkinter as tk
@@ -82,6 +84,7 @@ class Story_Room():
     state = RecordingState.INIT 
     usb_drive_mounted = False
     output_file_name = ''
+    backup_system_msg = cfg.c_backup_no_config_msg
 
     ## countdown stuff, set in start_countdown()
     tw_countdown_seconds = 10
@@ -118,12 +121,15 @@ class Story_Room():
         self.obs1 = OBSXface(logger, host=cfg.obs1_host, port=cfg.obs1_port, password=cfg.obs1_pswd, callback=self.on_obs1_event)
         if self._debug: print(f'>>> obs1 configured: {self.obs1}')
         self.obs2 = None
-        if cfg.obs2_host != '': # if a backup system is configured, connect to it
+        if cfg.obs2_host == '': # if a backup system is configured, connect to it
+            pass
+        else:
             try:
                 self.obs2 = OBSXface(logger, host=cfg.obs2_host, port=cfg.obs2_port, password=cfg.obs2_pswd, callback=self.on_obs2_event)
             except:
                 self.obs2 = None
                 print('>>> Backup OBS did not respond!!!')
+                self.backup_system_msg = cfg.c_backup_unavailable_msg
             if self._debug: print(f'>>> obs2 configured: {self.obs2}')
 
         # start the OBS status updater; runs continuously (at every cfg.update_obs_status_delay seconds) 
@@ -368,7 +374,7 @@ class Story_Room():
                 self.obs2 = None
                 self.cw.set_info_line_2(cfg.c_backup_unavailable_msg, cfg.c_text_warn_color)         
         else:
-            self.cw.set_info_line_2(cfg.c_backup_unavailable_msg, cfg.c_text_warn_color)
+            self.cw.set_info_line_2(self.backup_system_msg, cfg.c_text_warn_color)
         # re-run ourself after the configured time
         self.obs_status_updater = self.wm.after(cfg.update_obs_status_delay, self.update_obs_status) 
 ### --- end of status update and background tasks
@@ -436,16 +442,20 @@ class Story_Room():
 ### --- miscellaneous
     def debug_exit(self, e):
         
-        self.cw.withdraw()     
+        try: self.cw.withdraw()     
+        except: pass
         try: self.wm.after_cancel(self.obs_status_updater)
         except: pass
         try: self.wm.after_cancel(self.usb_status_updater)
         except: pass
-        self.cw.set_state_line(f'\n>>> debug_exit: initiated with {e}', cfg.c_state_font_color)
-        if self._debug: print(f'\n>>> debug_exit: initiated with {e}')
-        self.tw.destroy()   
-        #self.kb.__del__() # 
-        self.kb.destroy()    
+        try:
+            self.cw.set_state_line((f'\n>>> debug_exit: initiated with {e}','!!!'), cfg.c_state_font_color)
+            if self._debug: print(f'\n>>> debug_exit: initiated with {e}')
+            self.tw.destroy()   
+            #self.kb.__del__() # 
+            self.kb.destroy()    
+        except:
+            pass
         if self.state == RecordingState.RECORDING:
             try:
                 self.obs1.stop_recording()
@@ -458,8 +468,11 @@ class Story_Room():
         if self.obs2 != None: # cfg.obs2_host != '':
             try: self.obs2.__del__()  
             except: pass
-        self.cw.destroy()
-        self.wm.destroy()
+        try:
+            self.cw.destroy()
+            self.wm.destroy()
+        except:
+            pass
         exit(17)
 ### --- end miscellaneous
 
