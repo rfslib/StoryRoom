@@ -483,7 +483,7 @@ if __name__ == '__main__':
     logger = logging.getLogger('SRlog')
     # https://docs.python.org/3/library/logging.html#logging.basicConfig
     logging.basicConfig(
-        filename=r'C:\Users\Story Room\Documents\srlog.' + datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename=r'C:\Users\Story Room\Documents\srlog.' + datetime.now().strftime('%Y%m%d_%H%M%S'),
         #filename=r'srlog.' + datetime.now().strftime('%Y%m%d_%H%M%S'),
         filemode='a',
         level=logging.INFO,

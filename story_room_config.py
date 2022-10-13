@@ -121,7 +121,7 @@ class StoryRoomConfiguration():
     obs1_host = '127.0.0.1'
     obs1_port = 4444
     obs1_pswd = 'family'
-    obs2_host = '' #'10.109.7.204' #'192.168.74.74' #give a host name/ip address to activate second system
+    obs2_host = '10.109.7.204' #'192.168.74.74' #give a host name/ip address to activate second system
     obs2_port = 4444
     obs2_pswd = 'family'
 
