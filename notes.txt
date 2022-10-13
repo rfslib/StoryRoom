@@ -1,4 +1,6 @@
 
+Projector reopens on start, but is blank. Maybe will need to open manually on start:
+https://github.com/obsproject/obs-websocket/blob/4.8.0/docs/generated/protocol.md#openprojector
 ------------------------------------------
 Auto Logon:
 (https://www.itprotoday.com/windows-78/how-do-i-enable-autologon)
