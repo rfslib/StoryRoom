@@ -121,8 +121,10 @@ class Story_Room():
         self.obs1 = OBSXface(logger, host=cfg.obs1_host, port=cfg.obs1_port, password=cfg.obs1_pswd, callback=self.on_obs1_event)
         # the projector screen comes up blank even if configured in OBS to restore automatically,
         # so we're going to try starting it manually
+        # https://obsproject.com/forum/threads/start-in-full-screen-preview.99332/
         self.obs1.call('OpenProjector', {'type': 'Preview', 'monitor': '0,0'})
         if self._debug: print(f'>>> obs1 configured: {self.obs1}')
+        
         self.obs2 = None
         if cfg.obs2_host == '': # if a backup system is configured, connect to it
             backup_system_msg = cfg.c_backup_no_config_msg
