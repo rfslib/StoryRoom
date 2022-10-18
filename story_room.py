@@ -122,6 +122,7 @@ class Story_Room():
         # the projector screen comes up blank even if configured in OBS to restore automatically,
         # so we're going to try starting it manually
         # https://obsproject.com/forum/threads/start-in-full-screen-preview.99332/
+        # consider implication here: https://obsproject.com/forum/resources/projector-hotkeys.1197/
         self.obs1.call('OpenProjector', {'type': 'Preview', 'monitor': '0,0'})
         if self._debug: print(f'>>> obs1 configured: {self.obs1}')
         
