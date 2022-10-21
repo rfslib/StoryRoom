@@ -57,12 +57,13 @@ control "Story Room" recording sessions
 
 version = '20221012'
 
+from cmath import inf
 from time import sleep
 import tkinter as tk
 from psutil import disk_partitions
 from psutil import disk_usage
 
-from os.path import basename
+from os.path import basename, splitext
 from os import system
 from shutil import copy
 
@@ -230,13 +231,21 @@ class Story_Room():
             self.output_file_name = basename(self.obs1.file_name) # default name is date/time
         else:
             self.output_file_name += '_' + basename(self.obs1.file_name) # add date/time to chosen name to avoid conflicts (multi-session recordings)
+        ## -- 20221020: output the mp4, not the mkv
+        outfilename_parts = splitext(self.output_file_name)
+        self.output_file_name = outfilename_parts[0] + '.mp4'
         dest_filename = '{}:\\{}'.format(self.usb_drive_letter.get(), self.output_file_name) # prepend the USB drive letter
+        infilename_parts = splitext(self.obs1.file_name)
+        infilename = infilename_parts[0] + '.mp4'
+        self.obs1.file_name = infilename ## 
+        ### TODO: test: is their a remux? how long? how to tell if done?
+        ## --'
         if self._debug: print(f'>>> copying {self.obs1.file_name} to {dest_filename}') 
         self.set_state(RecordingState.COPYING)
         self.tw.set_txt('Copying the video to the USB drive...')
         sleep(0.5) # Does the set_txt need a bit of time?
         try:
-            copy(self.obs1.file_name, dest_filename)
+            copy(infilename, dest_filename)
         except:
             self.state = RecordingState.COPY_FAILED
             self.session_copy_fail()
