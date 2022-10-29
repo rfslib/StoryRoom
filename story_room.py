@@ -4,16 +4,14 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
-# TODO: status and next action to larger text, separate lines
-# TODO: *** FIX OBS Startup and projector display
-# TODO: automatic login and app startup: Main
+# TODO: *** FIX OBS projector display on startup, (and restart OBS after each session?)
 # TODO: use mp4; mkv no workee on iphone
+# TODO: automatic login and app startup: Main
 # TODO: how to show video sans delay
 # TODO: check, set Sources, Profile, Scene (create standards for these), (so no manual settings are required?)
-# TODO: auto-adjust to screen size (init for cfg)
+# TODO: auto-adjust to screen size (__init__ for cfg)
 # TODO: delete files after 3 months or xxG free disk (whichever is longer time)
 # TODO: all text to sr_parms
-# TODO: cancel on countdown needs to return to drive removal
 # TODO: force focus on control_window
 # TODO: all logic needs review after moving countdown stuff from timer_window
 # TODO: method to select copy of past recording
@@ -30,6 +28,8 @@ control "Story Room" recording sessions
 # TODO: set filename format (SetFilenameFormatting)
 # TODO: QSG (have this app set all parameters so no manual settings are required)
 # TODO: warn on version mismatch for OBS, websockets and simpleobsws
+# ----: some things have been accomplished:
+# DONE: status and next action to larger text, separate lines
 # DONE: automatic login and app startup: Backup
 # DONE: force focus of timer on monitor (projector) screen
 # DONE: change exit key to something remotely usable (i.e., ctrl-q)
