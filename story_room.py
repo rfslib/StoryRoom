@@ -4,13 +4,14 @@ author: rfslib
 
 control "Story Room" recording sessions
 '''
+# TODO: keep checking for OBS2 if unavailable: during idle (waiting for USB) and at end of session
 # TODO: *** FIX OBS projector display on startup, (and restart OBS after each session?)
 # TODO: use mp4; mkv no workee on iphone
+# TODO: delete files after 3 months or xxG free disk (whichever is longer time)
 # TODO: automatic login and app startup: Main
 # TODO: how to show video sans delay
 # TODO: check, set Sources, Profile, Scene (create standards for these), (so no manual settings are required?)
 # TODO: auto-adjust to screen size (__init__ for cfg)
-# TODO: delete files after 3 months or xxG free disk (whichever is longer time)
 # TODO: all text to sr_parms
 # TODO: force focus on control_window
 # TODO: all logic needs review after moving countdown stuff from timer_window
