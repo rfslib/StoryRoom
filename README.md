@@ -1,6 +1,6 @@
 # StoryRoom
 
-This repository contains the code for the Story Room at the Riverton FamilySearch Library.
+This repository contains the code for an FSC Story Room.
 
 Note: the file simpleobsws.py needs to be manually added, since a pip install gets a newer version that uses different class names. It can be found at: https://github.com/IRLToolkit/simpleobsws/tree/simpleobsws-4.x
 
@@ -25,4 +25,4 @@ The Story Room is a sound-proofed room where people can record a one-hour video.
     * OBS Studio
     * OBS websockets
 
-Note that OBS Studio allows internal scripting with Python, but that it was substantially more complex to do the controlling and on-screen display, so the control program was changed to be stand-alone (and use a supported, current version of Python).
+Note that OBS Studio allows internal scripting with Python, but that it was substantially more complex to do the controlling and on-screen display, so the control program was changed to be stand-alone (and also use a supported, current version of Python).

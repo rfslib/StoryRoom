@@ -31,8 +31,8 @@ class RecordingState(Enum):
 class StoryRoomConfiguration():
 
     # strings
-    c_title_text = 'Riverton FamilySearch Story Room'
-    timer_waiting_message = 'Riverton Story Room'
+    c_title_text = '<> Story Room'
+    timer_waiting_message = '<> Story Room'
     start_btn_txt = 'Start\nRecording'
     stop_btn_txt = 'Stop\nRecording'
     ttl = 'Story Room'       # control window title
