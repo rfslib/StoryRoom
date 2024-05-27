@@ -1,0 +1,10 @@
+comtypes==1.1.14
+mypy==0.971
+mypy-extensions==1.0.0
+numpy==1.23.3
+opencv-python==4.6.0.66
+psutil==5.9.1
+pygrabber==0.1
+tomli==2.0.1
+typing_extensions==4.11.0
+websockets==10.3
