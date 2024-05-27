@@ -45,6 +45,7 @@ class OBSXface(obsws):
         self.obs_version = ''           # OBS version
         self.ws_version = ''            # OBS WebSockets version
         self.obs_status = ''            # last OBS status from GetStats
+        self.event_handle = None        ## 20240527
         self.disk_space = 0             # OBS-reported available disk space on destination device
         self.file_name = ''             # last-reported filename being written
         self.last_event_type = ''       # last event
